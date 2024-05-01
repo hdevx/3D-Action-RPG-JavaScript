@@ -17,51 +17,53 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
 
 
     // todo move to own function
-    
-            // Function to get canvas-relative touch position
-            const canvas = document.getElementById("renderCanvas");
-            function getCanvasRelativePosition(event) {
-                const rect = canvas.getBoundingClientRect();
-                const touch = event.touches[0]; // Get the first touch
-                const xPos = touch.clientX - rect.left;
-                const yPos = touch.clientY - rect.top;
-                return new BABYLON.Vector2(xPos, yPos);
+
+    // Function to get canvas-relative touch position
+    const canvas = document.getElementById("renderCanvas");
+    function getCanvasRelativePosition(event) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = event.touches[0]; // Get the first touch
+        const xPos = touch.clientX - rect.left;
+        const yPos = touch.clientY - rect.top;
+        return new BABYLON.Vector2(xPos, yPos);
+    }
+
+    // Function to move character towards a point
+
+    function moveCharacterToPoint(point, character, scene) {
+        const pickResult = scene.pick(point.x, point.y);
+        if (pickResult.hit) {
+            const distanceToTarget = BABYLON.Vector3.Distance(character.position, pickResult.pickedPoint);
+            if (distanceToTarget > attackDistance) {
+                const target = pickResult.pickedPoint;
+                character.touchTarget = target;
+            } else {
+                const direction = pickResult.pickedPoint.subtract(character.position).normalize();
+                let forwardAngle = Math.atan2(direction.x, direction.z);
+                hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
+                var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
+                hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
+                console.log("hit close");
             }
 
-            // Function to move character towards a point
-            function moveCharacterToPoint(point, character, scene) {
-                const pickResult = scene.pick(point.x, point.y);
-                if (pickResult.hit) {
-                    const target = pickResult.pickedPoint;
-                    console.log(target);
+        }
+    }
 
-                    character.touchTarget = target;
+    let characterSpeed = 5; // Speed of the character moving towards the target
+    // scene.onBeforeRenderObservable.add(() => moveToTargetPoint());
+    function moveToTargetPoint() {
+        if (!character) return; // Check if character and targetPoint are defined
+    }
+    // Add touch event listener to canvas
+    canvas.addEventListener("touchstart", function (event) {
 
-                    // const direction = target.subtract(character.position).normalize();
-                    // direction.y = 0; // Keep the movement horizontal
-                    // const moveSpeed = 0.1; // Speed at which the character moves
-                    // character.position.addInPlace(direction.scale(moveSpeed));
-                }
-            }
+        const point = getCanvasRelativePosition(event);
+        // if (point.isEnemy) {attack}
+        // else 
+        moveCharacterToPoint(point, character, scene);
+        // character.target = character.position;
 
-            let characterSpeed = 5; // Speed of the character moving towards the target
-            // scene.onBeforeRenderObservable.add(() => moveToTargetPoint());
-            function moveToTargetPoint() {
-                if (!character) return; // Check if character and targetPoint are defined
-               
-            }
-            // Add touch event listener to canvas
-            canvas.addEventListener("touchstart", function(event) {
-                
-                const point = getCanvasRelativePosition(event);
-                // if (point.isEnemy) {attack}
-                // else 
-                moveCharacterToPoint(point, character, scene);
-                // character.target = character.position;
-
-
-
-            });
+    });
 }
 
 function handleGamepadInput(gamepad, character) {
@@ -87,29 +89,84 @@ function handleGamepadInput(gamepad, character) {
 
 
 function DoCombo() {
-    if (combo > 3) combo = 0;
+    if (combo >= 3) combo = 0;
     combo += 1;
-    console.log(combo);
-    SPELLS.quickSwing.cast(PLAYER.health, PLAYER.target.health);
+    // console.log(combo);
+    return combo;
 }
-// document.getElementById("renderCanvas").addEventListener('mousedown', function(event) {
-//         console.log("do combo");
-//         DoCombo();
-// });
-document.getElementById("renderCanvas").addEventListener("click", function(evt) {
-    DoCombo();
-});
+
+// Function to handle mouse clicks
+// attack anim time
+let lastClickTime = 0;
+let firstAttack = false;
+let secondAttack = false;
+function handleClick() {
+    // Set the variable to true on click
+    if (mouseIsActive || thirdAttack || firstAttack || secondAttack) { return; }
+
+
+    // clearTimeout(handleClick.thirdAttackWindowTimer);
+    const currentTime = Date.now();
+
+    // Check if the last click was within 700 milliseconds
+    if (currentTime - lastClickTime <= 500) {
+        clearTimeout(handleClick.thirdAttackTimer);
+        if (canTryThirdCombo && !firstAttack && !secondAttack) {
+            thirdAttack = true;
+            handleClick.thirdAttackTimer = setTimeout(() => {
+                thirdAttack = false;
+                SPELLS.heavySwing.cast(PLAYER.health, PLAYER.target.health);
+
+            }, 400);
+        } else {
+
+        }
+
+    } else {
+        // thirdAttack = false;
+    }
+    lastClickTime = currentTime;
+
+    clearTimeout(handleClick.firstTimer);
+    clearTimeout(handleClick.secondTimer);
+
+
+    if (thirdAttack) return;
+    let comboVal = DoCombo();
+    console.log(comboVal);
+    if (comboVal == 1) {
+        canTryThirdCombo = true;
+        mouseIsActive = true;
+        firstAttack = true;
+        handleClick.firstTimer = setTimeout(() => {
+            mouseIsActive = false;
+            firstAttack = false;
+            if (PLAYER.target) SPELLS.quickSwing.cast(PLAYER.health, PLAYER.target.health);
+        }, 100); //handle with engine time
+    } else {
+        mouseIsActive = true;
+        secondAttack = true;
+        handleClick.secondTimer = setTimeout(() => {
+            mouseIsActive = false;
+            secondAttack = false;
+            if (PLAYER.target) SPELLS.quickSwing.cast(PLAYER.health, PLAYER.target.health);
+        }, 100);
+    }
+}
+
+// mousedown versus click
+document.getElementById("renderCanvas").addEventListener('click', handleClick);
 
 
 window.addEventListener('keydown', onKeyDown);
 function onKeyDown(event) {
-    if (event.key ==="f") SPRINTING = !SPRINTING;
+    if (event.key === "f") SPRINTING = !SPRINTING;
     if (event.key === "4") {
         DoCombo();
     }
-    if (event.key ==="5") {
+    if (event.key === "5") {
         SPELLS.heavySwing.cast(PLAYER.health, PLAYER.target.health);
-        
+
     }
     if (event.key === "1") {
         SPELLS.fireball.cast(PLAYER.health, PLAYER.target.health);
@@ -131,26 +188,30 @@ let sprintSpeed = 1.5;
 let speed = normalSpeed;
 let lastMoveDirection = BABYLON.Vector3.Zero();
 let mobileMoving = false;
+let mouseIsActive = false;
+let attackDistance = 15.0;
+let thirdAttack = false;
+let canTryThirdCombo = false;
 function handleCharacterMovement(inputMap, character, camera, hero, anim, engine, dummyAggregate) {
 
     var forward = camera.getFrontPosition(1).subtract(camera.position).normalize().scaleInPlace(speed);
-        forward.y = 0;  // Ensure the player only moves horizontally
-        // fix the player stopping moving when camera above
+    forward.y = 0;  // Ensure the player only moves horizontally
+    // fix the player stopping moving when camera above
 
-        var forwardAngle = Math.atan2(forward.x, forward.z);
-        // Set the character's rotation to face the direction the camera is looking
+    var forwardAngle = Math.atan2(forward.x, forward.z);
+    // Set the character's rotation to face the direction the camera is looking
 
-        var right = forward.clone().rotateByQuaternionAroundPointToRef(
-            BABYLON.Quaternion.FromEulerAngles(0, Math.PI / 2, 0), 
-            BABYLON.Vector3.Zero(), 
-            new BABYLON.Vector3()
-        );
-        
+    var right = forward.clone().rotateByQuaternionAroundPointToRef(
+        BABYLON.Quaternion.FromEulerAngles(0, Math.PI / 2, 0),
+        BABYLON.Vector3.Zero(),
+        new BABYLON.Vector3()
+    );
+
 
     // let moveDirection = dummyAggregate.body.getLinearVelocity();
-    let moveDirection = new BABYLON.Vector3(lastMoveDirection.x,  lastMoveDirection.y ,lastMoveDirection.z);
+    let moveDirection = new BABYLON.Vector3(lastMoveDirection.x, lastMoveDirection.y, lastMoveDirection.z);
     if (!anim.Roll.isPlaying && !anim.Attack.isPlaying) {
-        moveDirection = new BABYLON.Vector3(0, dummyAggregate.body.getLinearVelocity().y ,0);
+        moveDirection = new BABYLON.Vector3(0, dummyAggregate.body.getLinearVelocity().y, 0);
     }
     // let moveDirection = dummyAggregate.body.getLinearVelocity();
     if (inputMap["w"] || inputMap["ArrowUp"]) {
@@ -159,29 +220,29 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
         var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
         hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
 
-        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying){
+        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying) {
             for (let key in anim) {
                 if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                    if (key !== 'Running')anim[key].stop();
+                    if (key !== 'Running') anim[key].stop();
                 }
             }
             anim.Running.start(true, 1.1, anim.Running.from, anim.Running.to, false);
         }
 
-        
+
         // anim.Running.play();
         // anim.Running.weight = 0.5;
         // scene.beginAnimation(hero, anim.Running.from, anim.Running.to, true);
         // anim.Running._weight = 1;
-        
+
     }
     if (inputMap["s"] || inputMap["ArrowDown"]) {
-        moveDirection.subtractInPlace(forward); 
+        moveDirection.subtractInPlace(forward);
         hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
-        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying){
+        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying) {
             for (let key in anim) {
                 if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                    if (key !== 'Running')anim[key].stop();
+                    if (key !== 'Running') anim[key].stop();
                 }
             }
             anim.Running.start(true, 1.1, anim.Running.from, anim.Running.to, false);
@@ -190,12 +251,12 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
     if (inputMap["q"] || inputMap["ArrowLeft"]) {
         moveDirection.subtractInPlace(right.scaleInPlace(0.7));
         hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
-        var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI/2, 0, 0);
+        var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI / 2, 0, 0);
         hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
-        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying){
+        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying) {
             for (let key in anim) {
                 if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                    if (key !== 'Running')anim[key].stop();
+                    if (key !== 'Running') anim[key].stop();
                 }
             }
             anim.Running.start(true, 1.1, anim.Running.from, anim.Running.to, false);
@@ -204,63 +265,63 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
     if (inputMap["e"] || inputMap["ArrowRight"]) {
         moveDirection.addInPlace(right.scaleInPlace(0.7));
         hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
-        var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(-Math.PI/2, 0, 0);
+        var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(-Math.PI / 2, 0, 0);
         hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
-        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying){
+        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying) {
             for (let key in anim) {
                 if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                    if (key !== 'Running')anim[key].stop();
+                    if (key !== 'Running') anim[key].stop();
                 }
             }
             anim.Running.start(true, 1.1, anim.Running.from, anim.Running.to, false);
         }
     }
-    
+
     // do for all four directions
     if (inputMap["q"] && inputMap["w"]) {
         hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
-        var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(3 * Math.PI/4, 0, 0);
+        var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(3 * Math.PI / 4, 0, 0);
         hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
         moveDirection.scaleInPlace(0.72);
     }
 
     if (SPRINTING) {
-        
-        moveDirection =forward.scaleInPlace(sprintSpeed); // fix running in air when sprinting
+
+        moveDirection = forward.scaleInPlace(sprintSpeed); // fix running in air when sprinting
         hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
         var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
         hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
-    
-        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying){
-    
+
+        if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying) {
+
             for (let key in anim) {
                 if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                    if (key !== 'Running')anim[key].stop();
+                    if (key !== 'Running') anim[key].stop();
                 }
             }
             anim.Running.start(true, 1.5, anim.Running.from, anim.Running.to, false);
-    
+
         }
     }
-    
+
     if (moveDirection.length() > 0) {
         // character.moveWithCollisions(moveDirection);
         // if (!anim.Roll.isPlaying) {
         // }
 
         dummyAggregate.body.setLinearVelocity(moveDirection);
-            if (anim.Roll.isPlaying || anim.Attack.isPlaying || anim.Combo.isPlaying) {
-                dummyAggregate.body.setLinearVelocity(moveDirection.scaleInPlace(0.5 * rollSpeed));
-            } else {
-                lastMoveDirection = moveDirection;
-            }
-        
+        if (anim.Roll.isPlaying || anim.Attack.isPlaying || anim.Combo.isPlaying) {
+            dummyAggregate.body.setLinearVelocity(moveDirection.scaleInPlace(0.5 * rollSpeed));
+        } else {
+            lastMoveDirection = moveDirection;
+        }
+
     }
 
-    
 
 
-    if (!inputMap["w"] && !inputMap["s"]  && !inputMap["q"]  && !inputMap["e"] && !SPRINTING && !mobileMoving) {
+
+    if (!inputMap["w"] && !inputMap["s"] && !inputMap["q"] && !inputMap["e"] && !SPRINTING && !mobileMoving) {
         //Default animation is idle when no key is down   
 
         // anim.BreathingIdle.start(true, 1.0, anim.BreathingIdle.from, anim.BreathingIdle.to, true);
@@ -270,10 +331,10 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
         //         if (key !== 'BreathingIdle')anim[key].stop();
         //     }
         // }
-        if (!anim.Roll.isPlaying &&  !anim.SelfCast.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying) {
+        if (!anim.Roll.isPlaying && !anim.SelfCast.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying) {
             anim.BreathingIdle.play(true);
         }
-        
+
         //Stop all animations besides Idle Anim when no key is down
         // sambaAnim.stop();
 
@@ -281,7 +342,7 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
         // if (anim.Running._weight >= -1 ) {
         //     anim.Running._weight -= 0.03;
         // }
-        
+
         // walkBackAnim.stop();
     }
 
@@ -293,62 +354,63 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
     let combo1length = anim.Combo.from + 60;
     let combo2length = anim.Combo.from + 110;
     // combo
-    if (inputMap["4"]) {
+    if (inputMap["4"] || mouseIsActive && !thirdAttack) {
         anim.BreathingIdle.stop();
         anim.Running.stop();
-        if (!anim.Roll.isPlaying &&  !anim.Running.isPlaying) {
-        for (let key in anim) {
-            if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                if (key !== 'Combo')anim[key].stop();
+        if (!anim.Roll.isPlaying && !anim.Running.isPlaying) {
+            for (let key in anim) {
+                if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
+                    if (key !== 'Combo') anim[key].stop();
+                }
             }
-        }
 
 
-        if (combo === 1) {
-            // anim.Combo.start(false, 1.8, combo1length -5, combo2length, true);
-            combo+=1;
-        }
-        if (combo === 2) {
-            anim.Combo.start(false, 1.8, anim.Combo.from + 25, combo1length, true);
-        }
-        if (combo === 3) {
-            anim.Combo.start(false, 1.8, combo2length, anim.Combo.to, true);
-            combo = 0;
-        }
+            if (combo === 1) {
+                // anim.Combo.start(false, 1.8, combo1length -5, combo2length, true);
+                combo += 1;
+            }
+            if (combo === 2) {
+                anim.Combo.start(false, 1.6, combo2length, anim.Combo.to - 65, true);
+            }
+            if (combo === 3) {
+                anim.Combo.start(false, 1.6, anim.Combo.from + 25, combo1length, true);
 
-        
-    }
+                combo = 0;
+            }
+
+
+        }
     }
 
 
     // todo replace input map with keyrebind
     // todo replace with spell system. 
-    if (inputMap["5"]) {
+    if (inputMap["5"] || thirdAttack) {
         anim.BreathingIdle.stop();
         anim.Running.stop();
-        if (!anim.Roll.isPlaying &&  !anim.Running.isPlaying) {
-        for (let key in anim) {
-            if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                if (key !== 'Attack')anim[key].stop();
+        if (!anim.Roll.isPlaying && !anim.Running.isPlaying) {
+            for (let key in anim) {
+                if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
+                    if (key !== 'Attack') anim[key].stop();
+                }
             }
-        }
-        anim.Attack.start(false, 1.3, anim.Attack.from, anim.Attack.to - 20, true);
+            anim.Attack.start(false, 1.3, anim.Attack.from, anim.Attack.to - 20, true);
 
-        // spawn effect
-    }
+            // spawn effect
+        }
     }
 
     if (inputMap["c"]) {
         // anim.Running.stop();
-        if (!anim.Roll.isPlaying &&  !anim.Running.isPlaying) {
-        for (let key in anim) {
-            if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                if (key !== 'SelfCast')anim[key].stop();
+        if (!anim.Roll.isPlaying && !anim.Running.isPlaying) {
+            for (let key in anim) {
+                if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
+                    if (key !== 'SelfCast') anim[key].stop();
+                }
             }
+            // anim.SelfCast.play();
+            anim.SelfCast.start(false, 1.0, anim.SelfCast.from, anim.SelfCast.to - 50, true);
         }
-        // anim.SelfCast.play();
-        anim.SelfCast.start(false, 1.0, anim.SelfCast.from, anim.SelfCast.to - 50, true);
-    }
     }
 
     if (inputMap[" "]) {
@@ -357,33 +419,32 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
         anim.Roll.start(false, 2.0, anim.Roll.from, anim.Roll.to, true);
         // speed = rollSpeed;
         // setTimeout(() => speed = normalSpeed, 800); 
-}
+    }
 
 
-    if (inputMap["v"] ) {
+    if (inputMap["v"]) {
         // let jumpImpulse = new BABYLON.Vector3(0, 20, 0);
-        anim.Jump.start(false, 1.0, anim.Jump.from + 30, anim.Jump.to -40, false);
+        anim.Jump.start(false, 1.0, anim.Jump.from + 30, anim.Jump.to - 40, false);
         if (character.physicsImpostor) {
             // character.physicsImpostor.applyImpulse(jumpImpulse, character.getAbsolutePosition());
         }
     }
 
-    
+
     const characterSpeed = 3000;
     if (character.touchTarget) {
         const distanceToTarget = BABYLON.Vector3.Distance(character.position, character.touchTarget);
-    
-        if (distanceToTarget > 15.5) { // Provide a threshold to stop moving when close enough
+
+        if (distanceToTarget > attackDistance) { //mobileMoveDistance // Provide a threshold to stop moving when close enough
             const direction = character.touchTarget.subtract(character.position).normalize();
             const step = direction.scale(characterSpeed / 60); // Assuming about 60 FPS
             // character.position.addInPlace(step);
             dummyAggregate.body.setLinearVelocity(step);
-            console.log("mov");
             let forwardAngle = Math.atan2(direction.x, direction.z);
             hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
             var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
             hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
-    
+
             // if (!anim.Roll.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying){
             //     for (let key in anim) {
             //         if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
@@ -393,7 +454,7 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
             //     anim.Running.start(true, 1.1, anim.Running.from, anim.Running.to, false);
             // }
 
-            mobileMoving =true;
+            mobileMoving = true;
             anim.Running.start(true, 1.1, anim.Running.from, anim.Running.to, false);
 
         } else {

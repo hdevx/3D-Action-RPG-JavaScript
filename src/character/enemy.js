@@ -1,7 +1,7 @@
 import { attachHealthBar } from './damagePopup.js';
 import { Health } from './health.js';
 
-export function setupEnemies(scene, player, terrain, amount, mesh, hpbar){
+export function setupEnemies(scene, player, terrain, amount, mesh, hpbar) {
     let enemies = [];
 
     let enemyAttackDistance = 12;
@@ -29,7 +29,7 @@ function createEnemy(scene, mesh) {
     enemy.position = new BABYLON.Vector3(Math.random() * 100 - 50, 1, Math.random() * 100 - 50);
     enemy.scaling.scaleInPlace(5.7);
     // hero.position.y = -11;
-    let health = new Health ("Enemy", 20, enemy);
+    let health = new Health("Enemy", 50, enemy);
     enemy.health = health;
     return enemy;
 }
@@ -47,7 +47,7 @@ function addRandomMovement(enemy, scene, terrain) {
 
         // Get the terrain height at the new target position
         let terrainHeight = terrain.getHeightAtCoordinates(targetPosition.x, targetPosition.z);
-        
+
         // Update the target's Y position to match the terrain height
         targetPosition.y = terrainHeight + 5;
     }, 3000);
@@ -86,49 +86,49 @@ function attackIfClose(scene, enemy, player, enemyAttackDistance) {
 }
 
 
-function addEnemyOutline(scene, player ){
+function addEnemyOutline(scene, player) {
 
-scene.registerBeforeRender(() => {
-    let closestEnemy = null;
-    let minDistance = Infinity;
-    scene.meshes.forEach(mesh => {
-        if (mesh.name === "enemy" && mesh.health.isAlive   ) {
-            // todo move to shared method range and facing check
-            let distance = BABYLON.Vector3.Distance(mesh.position, player.position);
-            let directionToTarget = mesh.position.subtract(player.position);
-            directionToTarget.normalize();
-    
-            // Check if the caster is facing the target
-            let dotProduct = BABYLON.Vector3.Dot(player.health.rotationCheck.forward, directionToTarget);
-            // console.log(caster.rotationCheck.forward);
-            if (dotProduct < 0.5) {
-                // console.log("Caster is not facing the target.");
-                return false;
-            }
+    scene.registerBeforeRender(() => {
+        let closestEnemy = null;
+        let minDistance = Infinity;
+        scene.meshes.forEach(mesh => {
+            if (mesh.name === "enemy" && mesh.health.isAlive) {
+                // todo move to shared method range and facing check
+                let distance = BABYLON.Vector3.Distance(mesh.position, player.position);
+                let directionToTarget = mesh.position.subtract(player.position);
+                directionToTarget.normalize();
 
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestEnemy = mesh;
+                // Check if the caster is facing the target
+                let dotProduct = BABYLON.Vector3.Dot(player.health.rotationCheck.forward, directionToTarget);
+                // console.log(caster.rotationCheck.forward);
+                if (dotProduct < 0.5) {
+                    // console.log("Caster is not facing the target.");
+                    return false;
+                }
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestEnemy = mesh;
+                }
             }
+        });
+
+        scene.meshes.forEach(mesh => {
+            if (mesh.name === "enemy") {
+                mesh.renderOutline = false;
+                if (mesh.getChildren) {
+                    mesh.getChildren().forEach(child => {
+                        child.renderOutline = false;
+                    });
+                }
+            }
+        });
+
+        if (closestEnemy) {
+            applyOutlineToMeshAndChildren(closestEnemy, 0.02, BABYLON.Color3.Red());
+            player.target = closestEnemy;
         }
     });
-
-    scene.meshes.forEach(mesh => {
-        if (mesh.name === "enemy") {
-            mesh.renderOutline = false;
-            if (mesh.getChildren) {
-                mesh.getChildren().forEach(child => {
-                    child.renderOutline = false;
-                });
-            }
-        }
-    });
-
-    if (closestEnemy) {
-        applyOutlineToMeshAndChildren(closestEnemy, 0.02,  BABYLON.Color3.Red());
-        player.target = closestEnemy;
-    }
-});
 }
 
 function applyOutlineToMeshAndChildren(mesh, outlineWidth, outlineColor) {

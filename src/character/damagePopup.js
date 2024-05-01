@@ -3,7 +3,8 @@ import SceneManager from '../scene/SceneManager.js';
 // Assuming you have a global variable or singleton pattern to access the instance of SceneManager
 let sceneManager;  // This will be initialized with the SceneManager instance
 let damageAndHealthBarOffset = 5;
-let damageAndHealthBarOffsetScreenSpace = -150;
+// let damageAndHealthBarOffsetScreenSpace = -150;
+let damageAndHealthBarOffsetScreenSpace = -70; //needs to be multiplied by camera.radius and viewporrt hieght to be consistent across devices
 
 // TODO IMPORTANT: SPAWN IN 3D WORLD SPACE, DON'T USE GUI LAYER B/C BAD PERFORMANCE
 // USE Numbers from a texture atlas
@@ -33,8 +34,8 @@ function createDamagePopup(damage, position) {
         )
     );
 
-    startPosition.x = startPosition.x - sceneManager.engine.getRenderWidth()/2;
-    startPosition.y = startPosition.y - sceneManager.engine.getRenderHeight()/2;;
+    startPosition.x = startPosition.x - sceneManager.engine.getRenderWidth() / 2;
+    startPosition.y = startPosition.y - sceneManager.engine.getRenderHeight() / 2;;
     // let startPosition = position;
     startPosition.y = startPosition.y + damageAndHealthBarOffsetScreenSpace;
 
@@ -79,7 +80,7 @@ function createHealthBar(mesh) {
     healthBar.cornerRadius = 5;
     healthBar.color = "Black";
     healthBar.thickness = 2;
-    healthBar.background = "rgba(255,0,0,0.85)" ;
+    healthBar.background = "rgba(255,0,0,0.85)";
     healthBar.shadowBlur = 15;
     healthBar.shadowColor = 'black';
 
@@ -113,11 +114,11 @@ function createHealthBar(mesh) {
     //     startPosition.y = startPosition.y - sceneManager.engine.getRenderHeight()/2;;
     //     // healthBar.left = 10;
     //     // healthBar.top = 10;
-        
+
     //     healthBar.left = startPosition.x;
     //     healthBar.top = startPosition.y;
     //     }
-    
+
     // });
     healthBar.update = function (health, maxHealth) {
         // if (!healthBar || !healthBar.bar || !healthBar.text) {
@@ -137,12 +138,12 @@ function createHealthBar(mesh) {
     healthBar.linkWithMesh(mesh);
 
     healthBar.healthText = healthText;
-    return healthBar ;
+    return healthBar;
 }
 
 
 
-function createMeshLabel (mesh, message) {
+function createMeshLabel(mesh, message) {
     var label = new BABYLON.GUI.Rectangle(message);
     label.background = "black";
     label.height = "30px";
@@ -162,8 +163,8 @@ function createMeshLabel (mesh, message) {
 };
 
 function createHighPerformantHealthbar(mesh) {
-    
-    var nameplateAnchor =  new BABYLON.AbstractMesh("Nameplate Anchor", sceneManager.activeScene);
+
+    var nameplateAnchor = new BABYLON.AbstractMesh("Nameplate Anchor", sceneManager.activeScene);
     nameplateAnchor.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
     nameplateAnchor.position.y = -2.5; //-meshHieght
     nameplateAnchor.parent = mesh;
@@ -174,18 +175,18 @@ function createHighPerformantHealthbar(mesh) {
     healthBar.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
     // healthBar.position.y = -2.5; //-meshHieght
     healthBar.parent = nameplateAnchor;
-    healthBar.scaling = new BABYLON.Vector3(1,1,1);
-    
- 
+    healthBar.scaling = new BABYLON.Vector3(1, 1, 1);
+
+
     // var healthBar = new BABYLON.MeshBuilder.CreatePlane("healthBar", {width: 2, height: 0.7}, sceneManager.activeScene);
     // healthBar.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
     // // healthBar.position.y = -2.5; //-meshHieght
     // healthBar.parent = nameplateAnchor;
-    
+
     // healthBar.renderOutline = true;
     // healthBar.outlineWidth = 1.1;
     // healthBar.outlineColor = new BABYLON.Color3.Black();
-    
+
     // var healthBarBackground = new BABYLON.MeshBuilder.CreatePlane("healthBarBackground", {width: 2, height: 0.7}, sceneManager.activeScene);
     // healthBarBackground.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
     // // healthBar.position.y = -2.5; //-meshHieght
@@ -193,13 +194,13 @@ function createHighPerformantHealthbar(mesh) {
     // healthBarBackground.scaling.scaleInPlace(1.1,1.1,1.1);
     // healthBarBackground.position.x = -0.001;
     // healthBarBackground.position.z = -0.001;
-    
+
     // var backgroundMaterial = new BABYLON.BackgroundMaterial("backgroundMaterial", sceneManager.activeScene);
     // backgroundMaterial.diffuseColor = new BABYLON.Color3(0, 1, 0); // Green color
     // healthBarBackground.material = backgroundMaterial;
- 
 
-    
+
+
 
     healthBar.update = function (health, maxHealth) {
         // if (!healthBar || !healthBar.bar || !healthBar.text) {
@@ -208,7 +209,7 @@ function createHighPerformantHealthbar(mesh) {
         // }
         let healthPercentage = health / maxHealth;
         // console.log(healthPercentage);
-        healthBar.scaling.x =  healthPercentage;  // Dynamic width based on health
+        healthBar.scaling.x = healthPercentage;  // Dynamic width based on health
         // healthBar.healthText.text = `${Math.floor(healthPercentage)}%`;
         // healthBar.bar.background = healthPercentage < 50 ? "red" : "green";  // Color change based on health status
     }
@@ -222,7 +223,7 @@ function createHighPerformantHealthbar(mesh) {
 function attachHealthBar(mesh) {
     // createMeshLabel(mesh, "test" );
     // let healthBar = createHealthBar(mesh);
-    
+
     let healthBar = createHighPerformantHealthbar(mesh);
     return healthBar;
     // if (healthBar) {
@@ -236,7 +237,7 @@ function attachHealthBar(mesh) {
 
 function setSceneManager(manager) {
     sceneManager = manager;
-  }
+}
 
-  
+
 export { createDamagePopup, setSceneManager, attachHealthBar };

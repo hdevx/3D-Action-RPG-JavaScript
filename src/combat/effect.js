@@ -10,7 +10,9 @@ export class Effect {
         if (target instanceof Health) {
             switch (this.type) {
                 case 'damage':
-                    target.takeDamage(this.value);
+                    const randomValue = Math.floor(Math.random() * 3);
+                    // Add this random value to 'this.value' and pass it to the 'takeDamage' method
+                    target.takeDamage(this.value + randomValue);
                     break;
                 case 'heal':
                     target.heal(this.value);

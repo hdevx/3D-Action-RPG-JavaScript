@@ -3,28 +3,13 @@ import SceneManager from '/src/scene/SceneManager.js';
 import { setSceneManager } from './src/character/damagePopup.js';
 
     window.addEventListener('DOMContentLoaded', async function () {
-        // const { scene, engine } = await createScene();
-
-        // engine.runRenderLoop(() => {
-        //     scene.render();
-        // });
+    
 
         const sceneManager = new SceneManager('renderCanvas');
         sceneManager.start();
 
         setSceneManager(sceneManager);
-
-        // window.addEventListener('resize', () => {
-        //     engine.resize();
-        // });
-
-        
     });
-
-
-    
-
-    import { loadHeroModel } from './src/character/hero.js';
 
     // async function createScene() {
     //     let anim = setupAnim(scene, hero);

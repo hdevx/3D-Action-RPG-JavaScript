@@ -30,7 +30,6 @@ export class Spell {
         
         // console.log(caster);
         let range = BABYLON.Vector3.Distance(caster.rangeCheck.position, target.position);
-        console.log(range);
         if (range > this.range) return false;
             //   Calculate the vector from the caster to the target
               let directionToTarget = target.position.subtract(caster.rangeCheck.position);

@@ -62,7 +62,12 @@ class SceneManager {
         this.switchToScene(2);
       }
     });
+    
+    window.addEventListener('resize', () => {
+      this.engine.resize();
+    });
   }
+
 }
 
 export default SceneManager;
