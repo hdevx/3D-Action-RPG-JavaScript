@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Babylon Template</title>
+
+    <style>
+      html,
+      body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #renderCanvas {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+    </style>
+
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+
+    <script src="https://cdn.babylonjs.com/materialsLibrary/babylon.terrainMaterial.js"> </script>
+
+    <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
+
+  </head>
+
+  <body>
+    <canvas id="renderCanvas" touch-action="none"></canvas>
+    <!-- touch-action="none" for best results from PEP -->
+    <script type="application/vertexShader" id="vertexShaderCode">
+      #ifdef GL_ES
+          precision highp float;
+      #endif
+  
+      
+
+      attribute vec3 position;
+      uniform mat4 worldViewProjection;
+      
+      void main() {
+          gl_Position = worldViewProjection * vec4(position, 1.0);
+      }
+  </script>
+  
+  <script type="application/fragmentShader" id="fragmentShaderCode">
+    #ifdef GL_ES
+    precision highp float;
+#endif
+
+uniform float iTime;
+uniform vec2 iResolution;
+uniform sampler2D iChannel0;
+uniform sampler2D iChannel1;
+
+
+void main() {
+    vec2 uv = gl_FragCoord.xy / iResolution;
+    vec2 warpUV = 2.0 * uv;
+
+    float d = length(warpUV);
+    vec2 st = warpUV * 0.1 + 0.2 * vec2(cos(0.071 * iTime * 2.0 + d),
+                                        sin(0.073 * iTime * 2.0 - d));
+
+    vec3 warpedCol = texture2D(iChannel0, st).xyz * 2.0;
+    float w = max(warpedCol.r, 0.85);
+
+    vec2 offset = 0.01 * cos(warpedCol.rg * 3.14159);
+    vec3 col = texture2D(iChannel1, uv + offset).rgb * vec3(0.8, 0.8, 1.5);
+    col *= w * 1.2;
+
+    gl_FragColor = vec4(mix(col, texture2D(iChannel1, uv + offset).rgb, 0.5), 1.0);
+}
+ 
+  </script>
+
+    <script src="./src/GLOBALS.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script type="module" src="game.js"></script>
+</body>
+</html>
