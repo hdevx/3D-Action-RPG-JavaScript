@@ -30,23 +30,71 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
 
     // Function to move character towards a point
 
+    function pickTerrain(scene, x, y) {
+        // Convert screen coordinates to a ray in world space
+        var ray = scene.createPickingRay(x, y, BABYLON.Matrix.Identity(), scene.activeCamera);
+
+        // Predicate function to identify the terrain
+        var predicate = function (mesh) {
+            return mesh.isPickable && mesh.isEnabled() && mesh.name === "ground"; // Ensure it's the terrain
+        };
+
+        // Execute raycasting with the predicate to ensure only terrain is considered
+        var hit = scene.pickWithRay(ray, predicate);
+
+        if (hit.hit) {
+            // console.log("Terrain was hit at:", hit.pickedPoint);
+            // Additional logic can be added here, e.g., moving an object to the hit location
+        } else {
+            // console.log("No terrain was hit");
+        }
+        return hit;
+    }
+
+    function pickEnemy(scene, x, y) {
+        // Convert screen coordinates to a ray in world space
+        var ray = scene.createPickingRay(x, y, BABYLON.Matrix.Identity(), scene.activeCamera);
+
+        // Predicate function to identify the terrain
+        var predicate = function (mesh) {
+            return mesh.isPickable && mesh.isEnabled() && mesh.name === "enemyClone.Sphere"; // Ensure it's the terrain
+        };
+
+        // Execute raycasting with the predicate to ensure only terrain is considered
+        var hit = scene.pickWithRay(ray, predicate);
+
+        if (hit.hit) {
+            console.log("enemy was hit");
+            return true;
+            // Additional logic can be added here, e.g., moving an object to the hit location
+        } else {
+            return false;
+            console.log("enemy was hit");
+            // console.log("No terrain was hit");
+        }
+        return hit;
+    }
+
     function moveCharacterToPoint(point, character, scene) {
-        const pickResult = scene.pick(point.x, point.y);
-        if (pickResult.hit) {
+        // const pickResult = scene.pick(point.x, point.y);
+        // if hit an enemy, don't move just attack
+        const hitEnemy = pickEnemy(scene, point.x, point.y);
+        const pickResult = pickTerrain(scene, point.x, point.y);
+        if (pickResult.hit && !hitEnemy) {
             const distanceToTarget = BABYLON.Vector3.Distance(character.position, pickResult.pickedPoint);
             if (distanceToTarget > attackDistance) {
                 const target = pickResult.pickedPoint;
                 character.touchTarget = target;
-            } else {
-                const direction = pickResult.pickedPoint.subtract(character.position).normalize();
-                let forwardAngle = Math.atan2(direction.x, direction.z);
-                hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
-                var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
-                hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
-                console.log("hit close");
             }
-
+        } else {
+            const direction = pickResult.pickedPoint.subtract(character.position).normalize();
+            let forwardAngle = Math.atan2(direction.x, direction.z);
+            hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
+            var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
+            hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
+            console.log("hit close");
         }
+
     }
 
     let characterSpeed = 5; // Speed of the character moving towards the target
@@ -103,7 +151,11 @@ let secondAttack = false;
 function handleClick() {
     // Set the variable to true on click
     if (mouseIsActive || thirdAttack || firstAttack || secondAttack) { return; }
-
+    if (mobileMoving) return;
+    console.log(mobileMoving);
+    // const distanceToTarget = BABYLON.Vector3.Distance(character.position, character.touchTarget);
+    // if (distanceToTarget > attackDistance)
+    //     return;
 
     // clearTimeout(handleClick.thirdAttackWindowTimer);
     const currentTime = Date.now();
@@ -189,7 +241,7 @@ let speed = normalSpeed;
 let lastMoveDirection = BABYLON.Vector3.Zero();
 let mobileMoving = false;
 let mouseIsActive = false;
-let attackDistance = 15.0;
+let attackDistance = 17.0;
 let thirdAttack = false;
 let canTryThirdCombo = false;
 function handleCharacterMovement(inputMap, character, camera, hero, anim, engine, dummyAggregate) {
@@ -320,7 +372,6 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
 
 
 
-
     if (!inputMap["w"] && !inputMap["s"] && !inputMap["q"] && !inputMap["e"] && !SPRINTING && !mobileMoving) {
         //Default animation is idle when no key is down   
 
@@ -334,6 +385,11 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
         if (!anim.Roll.isPlaying && !anim.SelfCast.isPlaying && !anim.Attack.isPlaying && !anim.Combo.isPlaying) {
             anim.BreathingIdle.play(true);
         }
+        // console.log()
+        // const noYMovementOnSlope = new BABYLON.Vector3(character.position.x, character.position.y, character.position.z);
+        // dummyAggregate.body.setTargetTransform(noYMovementOnSlope);
+        // dummyAggregate.body.setLinearVelocity(noYMovementOnSlope);
+
 
         //Stop all animations besides Idle Anim when no key is down
         // sambaAnim.stop();
