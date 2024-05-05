@@ -13,6 +13,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Debug SSH Key
+        run: echo "$SSH_PRIVATE_KEY"
+
       - name: Copy files to PythonAnywhere
         uses: appleboy/scp-action@master
         with:
@@ -20,4 +23,4 @@ jobs:
           username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
           key: ${{ secrets.PYTHONANYWHERE_SSH_KEY }}
           source: ./
-          target: /RPG/
+          target: /path/to/your/pythonanywhere/folder/
