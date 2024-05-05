@@ -1,0 +1,23 @@
+name: Copy to PythonAnywhere
+
+on:
+  push:
+    branches:
+      - main  # Replace with your branch name
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Copy files to PythonAnywhere
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.PYTHONANYWHERE_HOST }}
+          username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
+          key: ${{ secrets.PYTHONANYWHERE_SSH_KEY }}
+          source: ./
+          target: /RPG/
