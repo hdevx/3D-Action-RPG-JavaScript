@@ -13,6 +13,6 @@ jobs:
         run: sudo apt-get install -y sshpass
       
       - name: Copy repository to PythonAnywhere
-        run: sshpass -p ${{ secrets.PA_PASSWORD }} rsync -avz --exclude '.git' ./ ${{ secrets.PA_USER }}@ssh.pythonanywhere.com:/home/${{ secrets.PA_USER }}/path/to/repository/
+        run: sshpass -p ${{ secrets.PA_PASSWORD }} rsync --exclude '.git' ./ ${{ secrets.PA_USER }}@ssh.pythonanywhere.com:/home/${{ secrets.PA_USER }}/path/to/repository/
         env:
           PA_USER: your_pythonanywhere_username
