@@ -1,18 +1,23 @@
 name: Deploy to PythonAnywhere
 
-on: [push]
+on:
+  push:
+    branches:
+      - main  # Or your default branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      
-      - name: Install SSHpass
-        run: sudo apt-get install -y sshpass
-      
-      - name: Copy repository to PythonAnywhere
-        run: sshpass -p ${{ secrets.PA_PASSWORD }} rsync --exclude '.git' ./ ${{ secrets.PA_USER }}@ssh.pythonanywhere.com:/home/${{ secrets.PA_USER }}/path/to/repository/
-        env:
-          PA_USER: your_pythonanywhere_username
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Copy repository to PythonAnywhere
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.PYTHONANYWHERE_USERNAME }}.pythonanywhere.com
+        username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
+        key: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
+        port: 22
+        source: "."
+        target: "/home/${{ secrets.PYTHONANYWHERE_USERNAME }}/RPG/mysite/frontend/RPG"
