@@ -167,7 +167,8 @@ function handleClick() {
             thirdAttack = true;
             handleClick.thirdAttackTimer = setTimeout(() => {
                 thirdAttack = false;
-                SPELLS.heavySwing.cast(PLAYER.health, PLAYER.target.health);
+                if (PLAYER.target && targetBaseOnCameraView) rotateToTarget();
+                if (PLAYER.target) SPELLS.heavySwing.cast(PLAYER.health, PLAYER.target.health);
 
             }, 400);
         } else {
@@ -185,7 +186,7 @@ function handleClick() {
 
     if (thirdAttack) return;
     let comboVal = DoCombo();
-    console.log(comboVal);
+    // console.log(comboVal);
     if (comboVal == 1) {
         canTryThirdCombo = true;
         mouseIsActive = true;
@@ -193,6 +194,7 @@ function handleClick() {
         handleClick.firstTimer = setTimeout(() => {
             mouseIsActive = false;
             firstAttack = false;
+            if (PLAYER.target && targetBaseOnCameraView) rotateToTarget();
             if (PLAYER.target) SPELLS.quickSwing.cast(PLAYER.health, PLAYER.target.health);
         }, 100); //handle with engine time
     } else {
@@ -201,6 +203,7 @@ function handleClick() {
         handleClick.secondTimer = setTimeout(() => {
             mouseIsActive = false;
             secondAttack = false;
+            if (PLAYER.target && targetBaseOnCameraView) rotateToTarget();
             if (PLAYER.target) SPELLS.quickSwing.cast(PLAYER.health, PLAYER.target.health);
         }, 100);
     }
@@ -227,6 +230,16 @@ function onKeyDown(event) {
 
 }
 
+function rotateToTarget() {
+    var forwardTarget = PLAYER.target.position.subtract(PLAYER.position).normalize();
+    forwardTarget.y = 0;  // Ensure the player only moves horizontally
+    var forwardAngleTarget = Math.atan2(forwardTarget.x, forwardTarget.z);
+    PLAYER.health.rotationCheck.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngleTarget, 3.14, 0);
+    var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
+    PLAYER.health.rotationCheck.rotationQuaternion = rotationQuaternion.multiply(PLAYER.health.rotationCheck.rotationQuaternion);
+    // shouldRotateToTarget = false;
+}
+let shouldRotateToTarget = false;
 
 
 
@@ -245,6 +258,7 @@ let attackDistance = 17.0;
 let thirdAttack = false;
 let canTryThirdCombo = false;
 function handleCharacterMovement(inputMap, character, camera, hero, anim, engine, dummyAggregate) {
+    var currentVerticalVelocity = dummyAggregate.body.getLinearVelocity().y;
 
     var forward = camera.getFrontPosition(1).subtract(camera.position).normalize().scaleInPlace(speed);
     forward.y = 0;  // Ensure the player only moves horizontally
@@ -258,6 +272,10 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
         BABYLON.Vector3.Zero(),
         new BABYLON.Vector3()
     );
+
+    // if (shouldRotateToTarget) {
+
+    // }
 
 
     // let moveDirection = dummyAggregate.body.getLinearVelocity();
@@ -360,10 +378,10 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
         // character.moveWithCollisions(moveDirection);
         // if (!anim.Roll.isPlaying) {
         // }
-
+        moveDirection.y = currentVerticalVelocity;
         dummyAggregate.body.setLinearVelocity(moveDirection);
         if (anim.Roll.isPlaying || anim.Attack.isPlaying || anim.Combo.isPlaying) {
-            dummyAggregate.body.setLinearVelocity(moveDirection.scaleInPlace(0.5 * rollSpeed));
+            // dummyAggregate.body.setLinearVelocity(moveDirection.scaleInPlace(0.5 * rollSpeed));
         } else {
             lastMoveDirection = moveDirection;
         }
