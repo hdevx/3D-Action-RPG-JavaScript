@@ -216,6 +216,7 @@ document.getElementById("renderCanvas").addEventListener('click', handleClick);
 window.addEventListener('keydown', onKeyDown);
 function onKeyDown(event) {
     if (event.key === "f") SPRINTING = !SPRINTING;
+    // if (event.key === "Shift"){} SPRINTING = !SPRINTING;
     if (event.key === "4") {
         DoCombo();
     }
