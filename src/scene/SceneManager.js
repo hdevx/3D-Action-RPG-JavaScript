@@ -1,3 +1,5 @@
+import { createNight } from './scenes/night.js';
+import { createDayDynamicTerrain } from './scenes/day.js';
 import { createOutdoor } from './scenes/outdoor.js';
 import { createRoom } from './scenes/room.js';
 import { createUnderground } from './scenes/underground.js';
@@ -17,40 +19,39 @@ class SceneManager {
     this.scenes.push(scene);
     this.guiTextures.set(scene, new BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene));
     this.activeGUI = this.guiTextures.get(this.activeScene);
-    
+
     return scene;
   }
 
   async switchToScene(index) {
-    // console.log(this.activeScene);
     if (this.activeScene) {
-        this.engine.stopRenderLoop();
-        if (DEBUG) this.activeScene.debugLayer.hide();
-        // this.disposeActiveScene();
-    //   this.activeScene.dispose(); // Optional: dispose only if not planning to return to this scene
+      this.engine.stopRenderLoop();
+      if (DEBUG) this.activeScene.debugLayer.hide();
+      // this.disposeActiveScene();
+      //   this.activeScene.dispose(); // Optional: dispose only if not planning to return to this scene
     }
     this.activeScene = this.scenes[index];
     this.activeGUI = this.guiTextures.get(this.activeScene);
     this.engine.runRenderLoop(() => {
       this.activeScene.render();
     });
-    
+
     if (DEBUG) this.activeScene.debugLayer.show();
   }
 
-  
-
-//   todo map of scenes near
-// in this case, just load starting zone
-
+  // todo map of scenes near the current scene
+  // in this case, just load starting zone
   start() {
     this.loadScene(createOutdoor).then(() => {
       this.switchToScene(0);
       this.activeScene.debugLayer.show();
       // this.loadScene(createRoom);
+      // this.loadScene(createOutdoor);
+      // this.loadScene(createNight);
+      // this.loadScene(createDayDynamicTerrain);
       // this.loadScene(createUnderground);
     });
-    
+
 
     // Setup scene switching logic, e.g., based on user input or game events
     window.addEventListener('keydown', (e) => {
@@ -62,7 +63,7 @@ class SceneManager {
         this.switchToScene(2);
       }
     });
-    
+
     window.addEventListener('resize', () => {
       this.engine.resize();
     });
