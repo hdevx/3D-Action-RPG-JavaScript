@@ -1,5 +1,5 @@
 
-export  function setupAnim(scene) {
+export function setupAnim(scene) {
     let anim = {};
     // anim.BreathingIdle = scene.beginWeightedAnimation(skeleton, scene.getAnimationGroupByName("BreathingIdle").from, scene.getAnimationGroupByName("BreathingIdle").to, 0.0, true);
     // anim.Running = scene.beginWeightedAnimation(skeleton, scene.getAnimationGroupByName("RunningSprint").from, scene.getAnimationGroupByName("RunningSprint").to, 0.0, true);
@@ -13,7 +13,7 @@ export  function setupAnim(scene) {
     anim.SelfCast = scene.getAnimationGroupByName('Standing 2H Magic Area Attack 02');
     anim.Combo = scene.getAnimationGroupByName('OneHandClubCombo');
     anim.Attack = scene.getAnimationGroupByName('Sword And Shield Attack');
-    
+
     scene.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
     scene.animationPropertiesOverride.enableBlending = true;
     scene.animationPropertiesOverride.blendingSpeed = 0.15;

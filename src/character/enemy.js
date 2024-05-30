@@ -15,7 +15,8 @@ export function setupEnemies(scene, player, terrain, amount, mesh, hpbar) {
         // }, 1000);
     }
 
-    addEnemyOutline(scene, player);
+    // addEnemyOutline(scene, player);
+    addEnemyOutlineCamera(scene, player);
     // setTimeout(() => {
     //     attachHealthBar(enemies[0]);
     // }, 1000);
@@ -37,8 +38,14 @@ function createEnemy(scene, mesh) {
 function addRandomMovement(enemy, scene, terrain) {
     let targetPosition = enemy.position.clone();
 
+    let randomMoveTime = Math.random() * 6000 - 3000;
     // Update the target position every second
-    setInterval(() => {
+    enemy.interval = setInterval(() => {
+        if (!enemy.health.isAlive) {
+            clearTimeout(enemy.interval);
+            return;
+        }
+
         let randomX = Math.random() * 100 - 50;
         let randomZ = Math.random() * 100 - 50;
 
@@ -49,12 +56,22 @@ function addRandomMovement(enemy, scene, terrain) {
         let terrainHeight = terrain.getHeightAtCoordinates(targetPosition.x, targetPosition.z);
 
         // Update the target's Y position to match the terrain height
-        targetPosition.y = terrainHeight + 5;
+        targetPosition.y = terrainHeight + 2;
+
+        // set target facing
+
+        var forwardTarget = targetPosition.subtract(enemy.position).normalize();
+        forwardTarget.y = 0;  // Ensure the player only moves horizontally
+        var forwardAngleTarget = Math.atan2(forwardTarget.x, forwardTarget.z);
+        enemy.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngleTarget, 0, 0);
+        var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
+        enemy.rotationQuaternion = rotationQuaternion.multiply(enemy.rotationQuaternion);
     }, 3000);
 
     // Smoothly move enemy towards target position
     scene.onBeforeRenderObservable.add(() => {
         if (enemy.health.isAlive) {
+
             // Interpolate towards the target position
             enemy.position = BABYLON.Vector3.Lerp(enemy.position, targetPosition, 0.003);
 
@@ -65,6 +82,7 @@ function addRandomMovement(enemy, scene, terrain) {
                 enemy.moveWithCollisions(moveDirection);
             }
         }
+
     });
 }
 
@@ -85,6 +103,55 @@ function attackIfClose(scene, enemy, player, enemyAttackDistance) {
     });
 }
 
+
+function addEnemyOutlineCamera(scene, player) {
+
+    scene.registerBeforeRender(() => {
+        let closestEnemy = null;
+        let minDistance = Infinity;
+        scene.meshes.forEach(mesh => {
+            if (mesh.name === "enemy" && mesh.health.isAlive) {
+                // todo move to shared method range and facing check
+                let distance = BABYLON.Vector3.Distance(mesh.position, player.position);
+                let directionToTarget = mesh.position.subtract(player.position);
+                directionToTarget.normalize();
+
+                // Check if the caster is facing the target
+                var forward = scene.activeCamera.getFrontPosition(1).subtract(scene.activeCamera.position).normalize();
+                // forward.y = 0;  // Ensure the player only moves horizontally
+                // var forwardAngle = Math.atan2(forward.x, forward.z);
+
+                let dotProduct = BABYLON.Vector3.Dot(forward, directionToTarget);
+                // console.log(caster.rotationCheck.forward);
+                if (dotProduct < 0.5) {
+                    // console.log("Caster is not facing the target.");
+                    return false;
+                }
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestEnemy = mesh;
+                }
+            }
+        });
+
+        scene.meshes.forEach(mesh => {
+            if (mesh.name === "enemy") {
+                mesh.renderOutline = false;
+                if (mesh.getChildren) {
+                    mesh.getChildren().forEach(child => {
+                        child.renderOutline = false;
+                    });
+                }
+            }
+        });
+
+        if (closestEnemy) {
+            applyOutlineToMeshAndChildren(closestEnemy, 0.02, BABYLON.Color3.Red());
+            player.target = closestEnemy;
+        }
+    });
+}
 
 function addEnemyOutline(scene, player) {
 

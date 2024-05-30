@@ -1,5 +1,4 @@
-var dummyAggregate;
-export async function setupPhysics(scene) {
+export async function setupPhysics(scene, spawnPoint) {
     const normalGravity = new BABYLON.Vector3(0, -100.81, 0);
     const heavyGravity = new BABYLON.Vector3(0, -200, 0);
 
@@ -19,7 +18,7 @@ export async function setupPhysics(scene) {
     dummyPhysicsRoot.visibility = 0.0;
     dummyPhysicsRoot.position.y = 100;
 
-    dummyAggregate = new BABYLON.PhysicsAggregate(dummyPhysicsRoot, BABYLON.PhysicsShapeType.CAPSULE, { mass: 50, restitution: 0.0, friction: 0.8 }, scene);
+    var dummyAggregate = new BABYLON.PhysicsAggregate(dummyPhysicsRoot, BABYLON.PhysicsShapeType.CAPSULE, { mass: 500, restitution: 0.0, friction: 1.0 }, scene);
     dummyAggregate.body.setMotionType(BABYLON.PhysicsMotionType.DYNAMIC);
     // movePlayer(dummyAggregate);
     dummyAggregate.body.setCollisionCallbackEnabled(true);
@@ -27,19 +26,23 @@ export async function setupPhysics(scene) {
         inertia: new BABYLON.Vector3(0, 0, 0)
     });
     dummyAggregate.body.setGravityFactor(20);
+
+
+    havokInstance.HP_Body_SetPosition(dummyAggregate.body._pluginData.hpBodyId, [spawnPoint.x, spawnPoint.y, spawnPoint.z]);
+
     // dummyAggregate.body.setAxisFriction(BABYLON.HavokPlugin.LockConstraint, BABYLON.HavokPlugin.LINEAR_Y, 0);
     // camera.position.copyFrom(dummyPhysicsRoot.position)
     // dummyPhysicsRoot.setDirection(camera.getForwardRay().direction)
-    // console.log('DUMMY');
-    // console.log(dummyAggregate);
-    const observable = dummyAggregate.body.getCollisionObservable()
-    const observer = observable.add((collisionEvent) => {
-        // if(lflag){
-        //      console.log(collisionEvent)
-        //     lflag = false;
-        // }
 
-    });
+    // const observable = dummyAggregate.body.getCollisionObservable();
+    // const observer = observable.add((collisionEvent) => {
+    //     if(lflag){
+    //          console.log(collisionEvent)
+    //         lflag = false;
+    //     }
+    // });
+
+
 
     return {
         character: dummyPhysicsRoot,

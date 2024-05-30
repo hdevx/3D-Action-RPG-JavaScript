@@ -11,7 +11,7 @@ import { setupEnemies } from '../../character/enemy.js';
 import { Health } from '../../character/health.js';
 import addSword from '../../character/equips/held.js';
 
-export async function createOutdoor(engine) {
+export async function createTown(engine) {
     const scene = new BABYLON.Scene(engine);
 
     const spawnPoint = new BABYLON.Vector3(134.683, 80, -271.427);
@@ -29,7 +29,8 @@ export async function createOutdoor(engine) {
     camera.beta = 1.3437;
 
     // load all models, make sure parallel loading for speed
-    const modelUrls = ["characters/enemy/slime/Slime1.glb", "characters/weapons/Sword2.glb", "util/HPBar.glb"];
+    const modelUrls = ["characters/enemy/slime/Slime1.glb", "characters/weapons/Sword2.glb", "util/HPBar.glb",
+        "env/town/terrain/terrain.glb", "env/town/town_map.glb"];
     const heroModelPromise = loadHeroModel(scene, character);
     const [heroModel, models] = await Promise.all([
         heroModelPromise,
@@ -67,13 +68,64 @@ export async function createOutdoor(engine) {
 
     VFX['fireBall'] = addFireball(scene, engine);
 
-    scene.executeWhenReady(() => {
-        scene.render();
-        saveDepthMap(scene, engine);
-    });
+    addTownMap(scene, models);
+    addMountains(scene, models);
 
     return scene;
 }
+
+function addTownMap(scene, models) {
+    let town_map = models["town_map"];
+    town_map.name = "town map";
+    town_map.position.y = 30;
+
+    town_map.scaling = new BABYLON.Vector3(6, 6, 6);
+
+
+    town_map.getChildMeshes().forEach(mesh => {
+        mesh.material.metallic = 1;
+        // set levels
+
+        let town_mapCollision = new BABYLON.PhysicsAggregate(mesh, BABYLON.PhysicsShapeType.MESH, { mass: 0, restitution: 0.0, friction: 1.0 }, scene);
+
+    });
+}
+
+function placeObject(object, position, rotation, scale) {
+    object.position = position;
+    object.rotation = new BABYLON.Vector3(0, BABYLON.Tools.ToRadians(rotation.y), 0);
+    object.scaling = scale;
+
+}
+
+function addMountains(scene, models) {
+    // models["terrain"].scaling.scaleInPlace(20, 20, 20);
+    let mountainRight = models["terrain"].clone("mountainRight");
+    placeObject(mountainRight,
+        new BABYLON.Vector3(234.081, -10.638, 917.554),
+        new BABYLON.Vector3(93.495, 305, 40.352),
+        new BABYLON.Vector3(93.495, 90.614, 120)
+    );
+
+    let mountainLeft = models["terrain"].clone("mountainLeft");
+    placeObject(mountainLeft,
+        new BABYLON.Vector3(-1255.157, 0, 1011.619),
+        new BABYLON.Vector3(93.495, 307.9000, 40.352),
+        new BABYLON.Vector3(170, 120.614, 120));
+
+
+
+    const gizmoManager = new BABYLON.GizmoManager(scene);
+
+    // Enable position, rotation, and scale gizmos
+    gizmoManager.positionGizmoEnabled = true;
+    gizmoManager.rotationGizmoEnabled = true;
+    gizmoManager.scaleGizmoEnabled = true;
+
+    // Attach the gizmo to the trail
+    gizmoManager.attachToMesh(mountainRight);
+}
+
 
 function setupEnvironment(scene) {
     scene.clearColor = new BABYLON.Color3.White();
@@ -112,13 +164,13 @@ function setupTerrain(scene) {
     terrainMaterial.diffuseTexture3.uScale = terrainMaterial.diffuseTexture3.vScale = 23;
 
     const ground = BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", "assets/textures/terrain/hieghtMap.png", {
-        width: 1000,
-        height: 1000,
+        width: 2000,
+        height: 2000,
         subdivisions: 100,
         minHeight: 0,
-        maxHeight: 100,
+        maxHeight: 30,
         onReady: function (ground) {
-            ground.position.y = -10.05;
+            ground.position.y = 10.05;
             ground.material = terrainMaterial;
             ground.receiveShadows = true;
             // ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.0, friction: 100.8 }, scene);
@@ -507,134 +559,3 @@ function createTrail(scene, engine, objectToAttach, diameter, segments, offset, 
 
 }
 
-
-function saveDepthMap(scene, engine) {
-    var depthRenderer = scene.enableDepthRenderer();
-    if (!depthRenderer) {
-        console.error('Failed to enable depth renderer.');
-        return;
-    }
-
-    var depthTexture = depthRenderer.getDepthMap();
-    if (!depthTexture) {
-        console.error('Failed to get depth map.');
-        return;
-    }
-
-    console.log(depthTexture);
-    saveDepthTextureToFile(depthTexture, "depth.jpg", scene);
-
-    if (!engine) {
-        console.error('Failed to get engine from scene.');
-        return;
-    }
-
-    var width = depthTexture.getSize().width;
-    var height = depthTexture.getSize().height;
-
-    var internalTexture = depthTexture.getInternalTexture();
-    if (!internalTexture) {
-        console.error('Failed to get internal texture from depth map.');
-        return;
-    }
-
-    var pixels = new Uint8Array(width * height * 4);
-
-    try {
-        engine.bindFramebuffer(internalTexture);
-    } catch (error) {
-        console.error('Failed to bind framebuffer:', error);
-        return;
-    }
-
-    // Check if framebuffer binding is successful
-    if (!engine._currentFramebuffer) {
-        console.error('Failed to bind framebuffer.');
-        engine.unBindFramebuffer(internalTexture);
-        return;
-    }
-
-    try {
-        engine.readPixels(0, 0, width, height, pixels);
-    } catch (error) {
-        console.error('Error reading pixels:', error);
-        engine.unBindFramebuffer(internalTexture);
-        return;
-    }
-
-    engine.unBindFramebuffer(internalTexture);
-
-    // Create a canvas to convert the pixels to an image
-    var canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    var context = canvas.getContext('2d');
-    var imageData = context.createImageData(width, height);
-
-    // Copy pixel data to the ImageData object
-    for (var i = 0; i < pixels.length; i++) {
-        imageData.data[i] = pixels[i];
-    }
-
-    context.putImageData(imageData, 0, 0);
-
-    // Convert the canvas to a data URL
-    var dataURL = canvas.toDataURL();
-
-    // Trigger a download of the data URL
-    var link = document.createElement('a');
-    link.href = dataURL;
-    link.download = 'depthMap.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-function saveDepthTextureToFile(depthTexture, fileName, scene) {
-    // Create a dynamic texture for the output
-    var dynamicTexture = new BABYLON.DynamicTexture("dynamicTexture", depthTexture.getSize(), scene, false);
-    var context = dynamicTexture.getContext();
-
-    // Get the width and height of the texture
-    var width = depthTexture.getSize().width;
-    var height = depthTexture.getSize().height;
-
-    // Create a framebuffer to read the depth data
-    var gl = scene.getEngine()._gl;
-    var framebuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTexture._texture, 0);
-
-    // Create an array to hold the depth data
-    var depthData = new Float32Array(width * height);
-    gl.readPixels(0, 0, width, height, gl.DEPTH_COMPONENT, gl.FLOAT, depthData);
-
-    // Unbind the framebuffer
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-    // Convert the depth data to grayscale image data
-    var imageData = context.createImageData(width, height);
-    for (var i = 0; i < depthData.length; i++) {
-        var value = Math.floor(depthData[i] * 255); // Convert depth value to 0-255 range
-        imageData.data[i * 4] = value;     // Red
-        imageData.data[i * 4 + 1] = value; // Green
-        imageData.data[i * 4 + 2] = value; // Blue
-        imageData.data[i * 4 + 3] = 255;   // Alpha
-    }
-
-    // Put the image data onto the dynamic texture
-    context.putImageData(imageData, 0, 0);
-
-    // Convert the dynamic texture to a base64 string
-    var base64String = context.canvas.toDataURL();
-
-    // Create a link element
-    var link = document.createElement('a');
-    link.href = base64String;
-    link.download = fileName;
-
-    // Trigger the download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}

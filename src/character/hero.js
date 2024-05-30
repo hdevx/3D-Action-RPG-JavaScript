@@ -1,5 +1,10 @@
 export async function loadHeroModel(scene, character) {
 	const result = await BABYLON.SceneLoader.ImportMeshAsync(null, "./assets/characters/human_basemesh/", "HumanBaseMesh_WithEquips.glb", scene);
+
+	// 	result.meshes.forEach(mesh => {
+	// 		if (mesh.material) mesh.material.dispose();
+	// 	});
+
 	let hero = result.meshes[0];
 	// hero.parent = character;
 	character.addChild(hero);

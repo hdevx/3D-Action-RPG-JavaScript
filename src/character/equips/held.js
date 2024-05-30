@@ -9,13 +9,14 @@ export default function addSword(scene, sword) {
         specificChild.material.metallic = 1;
         specificChild.material.roughness = 1;
         // specificChild.material.roughness = 0.1; // looked cool, consider displacement maps 
-        console.log(specificChild.material);
+        // console.log(specificChild.material);
     } else {
         console.error("Sword material is not a PBRMaterial or is not assigned");
     }
 
     const rightHand = findAllMeshesByName(scene.meshes, "mixamorig:RightHand")[0];
     attachSwordToBone(specificChild, rightHand);
+    return specificChild;
 
 }
 

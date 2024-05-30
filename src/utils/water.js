@@ -18,9 +18,9 @@ export function setupWater(scene, ground, engine, player, y, size) {
     // 214 234 255
     scene.fogColor = new BABYLON.Color3(0.769, 0.86, 1); // Light grey fog
 
-    var gizmoManager = new BABYLON.GizmoManager(scene);
-    gizmoManager.positionGizmoEnabled = true;
-    gizmoManager.attachableMeshes = [water];
+    // var gizmoManager = new BABYLON.GizmoManager(scene);
+    // gizmoManager.positionGizmoEnabled = true;
+    // gizmoManager.attachableMeshes = [water];
     // stylized water shader
     BABYLON.Effect.ShadersStore["customVertexShader"] = "\r\n" +
         "precision highp float;\r\n" +

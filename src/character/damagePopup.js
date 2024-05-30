@@ -6,9 +6,7 @@ let damageAndHealthBarOffset = 5;
 // let damageAndHealthBarOffsetScreenSpace = -150;
 let damageAndHealthBarOffsetScreenSpace = -70; //needs to be multiplied by camera.radius and viewporrt hieght to be consistent across devices
 
-// TODO IMPORTANT: SPAWN IN 3D WORLD SPACE, DON'T USE GUI LAYER B/C BAD PERFORMANCE
-// USE Numbers from a texture atlas
-function createDamagePopup(damage, position) {
+function createDamagePopup(damage, position) { //createDamagePopupBabylonGUI
     if (!sceneManager) {
         console.error('SceneManager has not been initialized.');
         return;
@@ -241,3 +239,132 @@ function setSceneManager(manager) {
 
 
 export { createDamagePopup, setSceneManager, attachHealthBar };
+
+
+class FallingNumber {
+    constructor(scene, number, position, duration, direction, speedScale) {
+        this.scene = scene;
+        this.number = number;
+        this.position = position;
+        this.duration = duration;
+        this.direction = direction.normalize(); // Normalize the direction vector
+        this.speedScale = speedScale;
+
+        this.createTextPlane();
+        this.startAnimation();
+    }
+
+    createTextPlane() {
+        const dynamicTexture = new BABYLON.DynamicTexture("DynamicTexture", { width: 512, height: 256 }, this.scene, false);
+        dynamicTexture.hasAlpha = true;
+        // Draw black outline
+        dynamicTexture.drawText(this.number, null, 140, "bold 160px Arial", "black", "transparent", true, true);
+        // Draw red text on top
+        dynamicTexture.drawText(this.number, null, 140, "bold 140px Arial", "red", "transparent", true, false);
+
+        this.textPlane = BABYLON.MeshBuilder.CreatePlane("textPlane", { width: 5, height: 2.5 }, this.scene);
+        this.textPlane.position = new BABYLON.Vector3(this.position.x, this.position.y, this.position.z);
+        this.textPlane.material = new BABYLON.StandardMaterial("TextPlaneMaterial", this.scene);
+        this.textPlane.material.diffuseTexture = dynamicTexture;
+        this.textPlane.material.emissiveColor = new BABYLON.Color3(1, 0, 0);
+        this.textPlane.material.opacityTexture = dynamicTexture;
+        this.textPlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+    }
+
+    startAnimation() {
+        const animation = new BABYLON.Animation(
+            "movingInDirection",
+            "position",
+            60,
+            BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        const endPosition = this.position.add(this.direction.scale(this.speedScale));
+
+        const keys = [];
+        keys.push({ frame: 0, value: this.position });
+        keys.push({ frame: this.duration, value: endPosition });
+
+        animation.setKeys(keys);
+
+        // const easingFunction = new BABYLON.QuadraticEase();
+        // easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEOUT);
+
+        // animation.setEasingFunction(easingFunction);
+
+        this.textPlane.animations.push(animation);
+
+        this.scene.beginAnimation(this.textPlane, 0, this.duration, false);
+    }
+}
+
+
+// Todo Numbers from a texture atlas
+// uses 3D for better performance over babylon.js gui
+function createDamagePopupWorldSpace(damage, position) {
+    const direction = new BABYLON.Vector3(0, 1, 0); // Move upwards
+    const speedScale = 20; // Scale the movement speed
+    const fallingNumber = new FallingNumber(sceneManager.activeScene, "123", position, 120, direction, speedScale);
+
+}
+
+
+class NumberAnimator {
+    constructor() {
+        this.container = document.createElement('div');
+        document.body.appendChild(this.container);
+    }
+
+    animateNumber(number, x, y, duration) {
+        const numberElement = document.createElement('div');
+        numberElement.className = 'animated-number';
+        numberElement.textContent = number;
+        numberElement.style.left = `${x}px`;
+        numberElement.style.top = `${y}px`;
+        numberElement.style.animationDuration = `${duration}s`;
+
+        const keyframes = `@keyframes moveUp {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-100px);
+            }
+        }`;
+
+        const styleSheet = document.styleSheets[0];
+        styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+
+        numberElement.style.animationName = 'moveUp';
+
+        this.container.appendChild(numberElement);
+
+        setTimeout(() => {
+            this.container.removeChild(numberElement);
+        }, duration * 1000);
+    }
+}
+
+const animator = new NumberAnimator();
+function createDamagePopupHTML(damage, position) {
+    let damagePopupPosition = position.clone();
+    let hpBaroffset = -17.5;
+    damagePopupPosition.y = damagePopupPosition.y - hpBaroffset;
+
+    // document.getElementById('renderCanvas').width;
+    let hpOffset = -2.5;
+    // position.y = position.y - hpOffset; //changes the players position
+    let startPosition = BABYLON.Vector3.Project(
+        damagePopupPosition,
+        BABYLON.Matrix.Identity(),
+        sceneManager.activeScene.getTransformMatrix(),
+        sceneManager.activeScene.activeCamera.viewport.toGlobal(
+            document.getElementById('renderCanvas').width, //needs to be width of render canvas
+            sceneManager.engine.getRenderHeight()
+        )
+    );
+
+    animator.animateNumber(42, startPosition.x, startPosition.y, 2);
+
+}

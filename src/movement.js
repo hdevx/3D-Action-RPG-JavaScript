@@ -224,9 +224,8 @@ function onKeyDown(event) {
         SPELLS.heavySwing.cast(PLAYER.health, PLAYER.target.health);
 
     }
-    if (event.key === "1") {
+    if (event.key === "c") {
         SPELLS.fireball.cast(PLAYER.health, PLAYER.target.health);
-        // play spell in spot 6 instead
     }
 
 }

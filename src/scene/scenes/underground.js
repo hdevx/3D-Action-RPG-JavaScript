@@ -1,53 +1,53 @@
 import { loadHeroModel } from '../../character/hero.js';
-import { setupCamera } from '../../utils/camera.js'; 
-import { setupPhysics } from '../../utils/physics.js'; 
-import { setupInputHandling } from '../../movement.js'; 
-import { setupAnim } from '../../utils/anim.js'; 
+import { setupCamera } from '../../utils/camera.js';
+import { setupPhysics } from '../../utils/physics.js';
+import { setupInputHandling } from '../../movement.js';
+import { setupAnim } from '../../utils/anim.js';
 
 import { setupEnemies } from '../../character/enemy.js';
 
 import { Health } from '../../character/health.js';
 
 
-import { loadModels } from '../../utils/load.js'; 
+import { loadModels } from '../../utils/load.js';
 
 export async function createUnderground(engine) {
-  const scene = new BABYLON.Scene(engine);
-  
-  const {terrain, terrainMaterial} = setupTerrain(scene);
-  setupEnvironment(scene);
-//   createSkydome(scene);
+    const scene = new BABYLON.Scene(engine);
 
-  
-  const {character, dummyAggregate} = await setupPhysics(scene);
-  const camera = setupCamera(scene, character);
-  const {hero, skeleton} = await loadHeroModel(scene, character);
-//   move anim with character model
-  let anim = setupAnim(scene, skeleton);
-  setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate);
-  character.health = new Health("Hero", 100, dummyAggregate);
-  character.health.rotationCheck = hero;
-  character.health.rangeCheck = character;
-  PLAYER = character;
+    const { terrain, terrainMaterial } = setupTerrain(scene);
+    setupEnvironment(scene);
+    //   createSkydome(scene);
 
-  const light = setupLighting(scene);
-  addTorch(scene, new BABYLON.Vector3(1, 10, 1));
-//   todo huge performance hit
-//   setupShadows(light, hero);
-// setupPostProcessing(scene,camera);
-setUpFollowCamera(scene,camera,character);
-setupTurnCamera(scene, camera, engine);
 
-const modelUrls = ["characters/enemy/slime/slime1.glb", "characters/weapons/Sword2.glb"];
+    const { character, dummyAggregate } = await setupPhysics(scene);
+    const camera = setupCamera(scene, character);
+    const { hero, skeleton } = await loadHeroModel(scene, character);
+    //   move anim with character model
+    let anim = setupAnim(scene, skeleton);
+    setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate);
+    character.health = new Health("Hero", 100, dummyAggregate);
+    character.health.rotationCheck = hero;
+    character.health.rangeCheck = character;
+    PLAYER = character;
+
+    const light = setupLighting(scene);
+    addTorch(scene, new BABYLON.Vector3(1, 10, 1));
+    //   todo huge performance hit
+    //   setupShadows(light, hero);
+    // setupPostProcessing(scene,camera);
+    setUpFollowCamera(scene, camera, character);
+    setupTurnCamera(scene, camera, engine);
+
+    const modelUrls = ["characters/enemy/slime/Slime1.glb", "characters/weapons/Sword2.glb"];
     const models = await loadModels(scene, modelUrls);
 
-    const slime1 = models["slime1"];
+    const slime1 = models["Slime1"];
 
-setupEnemies(scene, character, terrain, 7, slime1);
+    setupEnemies(scene, character, terrain, 7, slime1);
 
 
 
-  return scene;
+    return scene;
 }
 
 
@@ -55,20 +55,20 @@ setupEnemies(scene, character, terrain, 7, slime1);
 
 function setUpFollowCamera(scene, camera, character) {
     let desiredRadius = 50;
-scene.onBeforeRenderObservable.add(() => {
-    if (character.position) {
-        
-        const offsetPosition = character.position.add(new BABYLON.Vector3(0, 10, 0)); 
-        
-        // Update camera target smoothly towards the character position
-        // camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), offsetPosition, 0.5));
-        camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), offsetPosition, 0.1));
-        camera.radius = BABYLON.Scalar.Lerp(camera.radius, desiredRadius, 0.05); // Smoothly interpolate to the desired radius
-        // You can also adjust camera radius dynamically if needed
+    scene.onBeforeRenderObservable.add(() => {
+        if (character.position) {
 
-        // camera.beta = 3 * Math.PI / 8;
-    } 
-});
+            const offsetPosition = character.position.add(new BABYLON.Vector3(0, 10, 0));
+
+            // Update camera target smoothly towards the character position
+            // camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), offsetPosition, 0.5));
+            camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), offsetPosition, 0.1));
+            camera.radius = BABYLON.Scalar.Lerp(camera.radius, desiredRadius, 0.05); // Smoothly interpolate to the desired radius
+            // You can also adjust camera radius dynamically if needed
+
+            // camera.beta = 3 * Math.PI / 8;
+        }
+    });
 
 
 }
@@ -93,7 +93,7 @@ function setupTurnCamera(scene, camera, engine) {
     scene.onBeforeRenderObservable.add(() => {
         if (keyStates['a']) {
             (camera.alpha);
-            camera.alpha += cameraRotationSpeed  * engine.getDeltaTime() / 1000;
+            camera.alpha += cameraRotationSpeed * engine.getDeltaTime() / 1000;
         }
 
         // Check if 'D' is pressed for rotating right
@@ -120,8 +120,8 @@ function createSkydome(scene) {
     // skyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
     // skyMaterial.emissiveTexture = new BABYLON.Texture("assets/textures/sky.png", scene);
     // skydome.material = skyMaterial;
-    
-    var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:10000.0}, scene);
+
+    var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 10000.0 }, scene);
     var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
     skyboxMaterial.backFaceCulling = false;
     skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/skybox", scene);
@@ -143,18 +143,18 @@ function setupTerrain(scene) {
     terrainMaterial.diffuseTexture1 = new BABYLON.Texture("assets/textures/terrain/tileDark.png", scene);
     terrainMaterial.diffuseTexture2 = new BABYLON.Texture("assets/textures/terrain/grassRock.png", scene);
     terrainMaterial.diffuseTexture3 = new BABYLON.Texture("assets/textures/terrain/grass.png", scene);
-    
+
     terrainMaterial.diffuseTexture1.uScale = terrainMaterial.diffuseTexture1.vScale = 25;
     terrainMaterial.diffuseTexture2.uScale = terrainMaterial.diffuseTexture2.vScale = 20;
     terrainMaterial.diffuseTexture3.uScale = terrainMaterial.diffuseTexture3.vScale = 23;
 
-    const ground =  BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", "assets/textures/terrain/hieghtMap.png", {
+    const ground = BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", "assets/textures/terrain/hieghtMap.png", {
         width: 1000,
         height: 1000,
         subdivisions: 100,
         minHeight: 0,
         maxHeight: -30,
-        onReady: function(ground) {
+        onReady: function (ground) {
             ground.position.y = -10.05;
             ground.material = terrainMaterial;
             ground.receiveShadows = true;
@@ -167,7 +167,7 @@ function setupTerrain(scene) {
                     scene.physicsEnabled = true;
                 }, 1000);
             }, 1000);
-            
+
         }
     }, scene);
 
@@ -177,20 +177,20 @@ function setupTerrain(scene) {
 
 
 function setupLighting(scene) {
-	var light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+    var light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.5;
 
-	light.diffuse = new BABYLON.Color3(1, 1, 1);
-	light.specular = new BABYLON.Color3(1, 1, 1);
-	// light.groundColor = new BABYLON.Color3(0.7, 0.7, 0.7);
+    light.diffuse = new BABYLON.Color3(1, 1, 1);
+    light.specular = new BABYLON.Color3(1, 1, 1);
+    // light.groundColor = new BABYLON.Color3(0.7, 0.7, 0.7);
     light.groundColor = new BABYLON.Color3(1.0, 1.0, 1.0);
-	
+
 
     return light;
 }
 
 function setupShadows(light, shadowCaster) {
-    
+
     const shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
     shadowGenerator.darkness = 0.6;
     shadowGenerator.usePoissonSampling = true;
@@ -208,7 +208,7 @@ function setupPostProcessing(scene, camera) {
         scene,    // The scene linked to
         [camera]  // The list of cameras to be attached to
     );
-    
+
     // Configure effects
     pipeline.samples = 4;  // MSAA anti-aliasing
     pipeline.bloomEnabled = true;  // Enable bloom
