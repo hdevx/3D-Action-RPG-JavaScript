@@ -8,17 +8,17 @@ import { loadModels } from '../../utils/load.js';
 
 import { Health } from '../../character/health.js';
 
-export async function createRoomGI(engine) {
+export async function createInn(engine) {
     const scene = new BABYLON.Scene(engine);
 
     const spawnPoint = new BABYLON.Vector3(0, 80, 80);
     const { character, dummyAggregate } = await setupPhysics(scene, spawnPoint);
 
     const camera = setupCamera(scene, character, engine);
-
+    camera.collisionRadius = new BABYLON.Vector3(12.5, 12.5, 12.5);
     // load all models, make sure parallel loading for speed
     const modelUrls = [
-        "env/interior/room/room_map.glb"];
+        "env/interior/inn/inn_map_procedural.glb"];
     const heroModelPromise = loadHeroModel(scene, character);
     const [heroModel, models] = await Promise.all([
         heroModelPromise,
@@ -46,12 +46,22 @@ export async function createRoomGI(engine) {
     // console.log(hero.getChildMeshes());
 
 
-    const light = setupLighting(scene);
-    const spotLight = setupSpotlight(scene);
+    setupLighting(scene);
 
 
-    let lights = [light, spotLight];
-    setupGI(scene, engine, lights, meshes);
+    // // advanced lighting
+    // // const spotLight = setupSpotlight(scene);
+    // const light = new BABYLON.DirectionalLight("directionalLight", new BABYLON.Vector3(-800, -1400, -1000), scene);
+    // light.intensity = 15.7;
+    // // // light.intensity = 0;
+    // // // light.shadowMinZ = 1800;
+    // // // light.shadowMinZ = 2100;
+    // light.shadowMinZ = 1500;
+    // light.shadowMaxZ = 2300;
+    // light.diffuse = new BABYLON.Color3(1, 1, 1);
+
+    // // let lights = [light, spotLight];
+    // // setupGI(scene, engine, lights, meshes);
 
     // setupShadows(light, hero);
 
@@ -111,6 +121,11 @@ function setupGI(scene, engine, lights, meshes) {
 
             // old starting levels for GI
             mesh.material.metallic = 0.8;
+            mesh.material.roughness = 1.0;
+            mesh.material.directIntensity = 0.15;
+
+            // new inn lighting
+            mesh.material.metallic = 0.6;
             mesh.material.roughness = 1.0;
             mesh.material.directIntensity = 0.15;
 
@@ -183,8 +198,9 @@ function setupGI(scene, engine, lights, meshes) {
 
 function addRoomMap(scene, models) {
     let meshes = [];
-    let town_map = models["room_map"];
-    town_map.name = "room map";
+    let town_map = models["inn_map_procedural"];
+    // let town_map = models["inn_map_procedural_individual"];
+    town_map.name = "inn map";
     town_map.position.y = 10;
 
     town_map.scaling = new BABYLON.Vector3(5, 5, 5);
@@ -357,6 +373,25 @@ async function GIDebug(scene, giRSMMgr, engine) {
             giRSMMgr.giRSM.forEach((girsm) => girsm.noiseFactor = value);
         });
 
+    gui
+        .add(params, "enableBlur")
+        .name("Enable Blur")
+        .onChange((value) => {
+            giRSMMgr.enableBlur = value;
+        });
+    gui
+        .add(params, "blurKernel", 1, 64, 1)
+        .name("Blur kernel")
+        .onChange((value) => {
+            giRSMMgr.blurKernel = value;
+        });
+    gui
+        .add(params, "useQualityBilateralBlur")
+        .name("Use quality blur")
+        .onChange((value) => {
+            giRSMMgr.useQualityBlur = value;
+        });
+
 
     // giRSMMgr.enable = true;
     // giRSMMgr.showOnlyGI = true;
@@ -371,10 +406,11 @@ function setupSpotlight(scene) {
     spotlight.specular = new BABYLON.Color3(1, 1, 1);
     // Mixed GI and normal
     // spotlight.intensity = 1000000;
-    spotlight.intensity = 1000000;
+    // spotlight.intensity = 1000000;
     // GI Only
-    // spotlight.intensity = 10000.0000;
+    spotlight.intensity = 10000.0000;
     // spotlight.angle = 166.1005;
+    spotlight.angle = 140.1005;
 
     var frameRate = 30;
     var animation = new BABYLON.Animation("spotlightAnimation", "direction", frameRate, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
@@ -401,14 +437,7 @@ function setupSpotlight(scene) {
 }
 
 function setupLighting(scene) {
-    const light = new BABYLON.DirectionalLight("light0", new BABYLON.Vector3(-800, -1400, -1000), scene);
-    light.intensity = 1.7;
-    // light.intensity = 0;
-    // light.shadowMinZ = 1800;
-    // light.shadowMinZ = 2100;
-    light.shadowMinZ = 1500;
-    light.shadowMaxZ = 2300;
-    light.diffuse = new BABYLON.Color3(1, 1, 1);
+
 
     // var light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
     // light.intensity = 1.7;
@@ -417,16 +446,24 @@ function setupLighting(scene) {
     // light.specular = new BABYLON.Color3(0, 1, 0);
     // light.groundColor = new BABYLON.Color3(0, 0.5, 1);
 
-    light.visible = true;
+    // light.visible = true;
 
-    return light;
+    var hemisphericLight = new BABYLON.HemisphericLight("hemisphericLight", new BABYLON.Vector3(0, 1, 0), scene);
+    hemisphericLight.intensity = 1.15; // Adjust intensity of the light
+    hemisphericLight.diffuse = new BABYLON.Color3(1, 183 / 255, 124 / 255); // White light
+    hemisphericLight.specular = new BABYLON.Color3(0.0, 0.0, 0.0); // Gray specular highlight
+    hemisphericLight.groundColor = new BABYLON.Color3(52 / 255, 63 / 255, 112 / 255); // Dark ground color
+
+
+    return hemisphericLight;
 }
 
 function setupShadows(light, shadowCaster) {
 
     const shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
     // shadowGenerator.useExponentialShadowMap = false;
-    shadowGenerator.darkness = 0.6;
+    shadowGenerator.darkness = 0.3;
+    // shadowGenerator.darkness = 0.6;
     // shadowGenerator.darkness = 1;
     shadowGenerator.usePoissonSampling = true;
     shadowGenerator.nearPlane = 1621.2952;
@@ -469,72 +506,5 @@ function setupPostProcessing(scene, camera) {
     //     var sharpen = new BABYLON.SharpenPostProcess("sharpen", 1.0, camera);
     // sharpen.edgeAmount = 0.15;  // Increase or decrease for more or less sharpening
     // sharpen.colorAmount = 1.0;
-
-}
-
-
-function createTrail(scene, engine, objectToAttach, diameter, segments, offset, rotation, scale) {
-    const fireTrailShader = new BABYLON.ShaderMaterial("fireTrail", scene, {
-        vertex: "../shaders/vfx/trail_sword",
-        fragment: "../shaders/vfx/trail_sword",
-    }, {
-        attributes: ["position", "normal", "uv"],
-        uniforms: ["world", "worldViewProjection", "view", "projection", "time"],
-        needAlphaBlending: true
-    });
-    // fireTrailShader.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
-    fireTrailShader.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-    fireTrailShader.backFaceCulling = false;
-
-    var trailNode = new BABYLON.TransformNode("trailNode");
-    trailNode.parent = objectToAttach;
-    trailNode.position = offset;
-    trailNode.scaling.scale
-    // Set rotation in degrees
-    var rotationXInDegrees = 196.2000;
-    var rotationYInDegrees = 269.8000;
-    var rotationZInDegrees = 0;
-
-    // Convert rotation from degrees to radians
-    trailNode.rotation.x = BABYLON.Tools.ToRadians(rotationXInDegrees);
-    trailNode.rotation.y = BABYLON.Tools.ToRadians(rotationYInDegrees);
-    trailNode.rotation.z = BABYLON.Tools.ToRadians(rotationZInDegrees);
-
-    // Set scale
-    trailNode.scaling = new BABYLON.Vector3(1, 0.2, 1);
-
-    // Can also rotate trailNode for cool effects!
-    // can use rotate z for hand casting animation!
-
-    const trail = new BABYLON.TrailMesh("SwordTrail", trailNode, scene, diameter, segments, true);
-    trail.diameter = diameter;
-    trail.material = fireTrailShader;
-    trail.alphaIndex = 0; // Set beside fire shader
-    // trail.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
-    // trail.scaling.scaleInPlace(1, 1, 1);
-
-    var offset = new BABYLON.Vector3(0, 2, 0);
-
-    const parentMesh = objectToAttach;
-    // Function to apply local transformation
-    function applyLocalTransformation(mesh, offset) {
-        // Transform the offset into the parent mesh's local space
-        var worldMatrix = mesh.getWorldMatrix();
-        var localOffset = BABYLON.Vector3.TransformCoordinates(offset, worldMatrix);
-        return localOffset;
-    }
-    // Update the trail mesh position with the offset
-    let time = 0;
-    scene.registerBeforeRender(() => {
-        time += engine.getDeltaTime() * 0.001;
-        fireTrailShader.setFloat("time", time);
-
-        // var localOffset = applyLocalTransformation(parentMesh, offset);
-        // trail.position = parentMesh.position.add(localOffset);
-        // trail.rotationQuaternion = parentMesh.rotationQuaternion ? parentMesh.rotationQuaternion.clone() : BABYLON.Quaternion.Identity();
-        // trail.update();
-    });
-
-    // trail.rotation.y = Math.PI / 4; // 45 degrees
 
 }

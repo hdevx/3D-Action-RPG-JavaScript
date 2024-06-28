@@ -34,6 +34,7 @@ export async function loadHeroModel(scene, character) {
 
 
 	result.meshes[0].getChildren()[0].getChildren().forEach(mesh => {
+		mesh.cameraCollide = false;
 		if (mesh.material) mesh.material.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
 	});
 	// result.meshes[1].material.backFaceCulling = true;

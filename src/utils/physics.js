@@ -26,6 +26,7 @@ export async function setupPhysics(scene, spawnPoint) {
         inertia: new BABYLON.Vector3(0, 0, 0)
     });
     dummyAggregate.body.setGravityFactor(20);
+    // dummyAggregate.body.setLinearDamping(0.9);
 
 
     havokInstance.HP_Body_SetPosition(dummyAggregate.body._pluginData.hpBodyId, [spawnPoint.x, spawnPoint.y, spawnPoint.z]);
