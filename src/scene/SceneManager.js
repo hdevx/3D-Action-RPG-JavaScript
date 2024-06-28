@@ -5,6 +5,7 @@ import { createRoom } from './scenes/room.js';
 import { createUnderground } from './scenes/underground.js';
 import { createTown } from './scenes/town.js';
 import { createRoomGI } from './scenes/roomGI.js';
+import { createInn } from './scenes/inn.js';
 
 class SceneManager {
   constructor(canvasId, engine) {
@@ -15,6 +16,16 @@ class SceneManager {
     this.guiTextures = new Map();
     this.scenes = [];
     this.activeScene = null;
+    this.sceneCreators = {
+      night: createNight,
+      day: createDayDynamicTerrain,
+      outdoor: createOutdoor,
+      room: createRoom,
+      underground: createUnderground,
+      town: createTown,
+      roomGI: createRoomGI,
+      inn: createInn
+    };
   }
 
   async initializeWebGPU() {
@@ -59,17 +70,17 @@ class SceneManager {
       await this.initializeWebGPU();
     }
 
-    this.loadScene(createRoomGI).then(() => {
-      this.switchToScene(0);
-      // this.loadScene(createTown);
-      // this.loadScene(createOutdoor);
-      // this.loadScene(createRoom);
-      // this.loadScene(createOutdoor);
-      // this.loadScene(createNight);
-      // this.loadScene(createDayDynamicTerrain);
-      // this.loadScene(createUnderground);
-    });
+    const urlParams = new URLSearchParams(window.location.search);
+    const sceneParam = urlParams.get('scene');
 
+    const sceneCreator = this.sceneCreators[sceneParam] || this.sceneCreators.inn; // Default to inn if no valid scene parameter
+
+    await this.loadScene(sceneCreator);
+    await this.switchToScene(0);
+
+    this.loadScene(createInn).then(() => {
+      this.switchToScene(0);
+    });
 
     // Setup scene switching logic, e.g., based on user input or game events
     window.addEventListener('keydown', (e) => {
