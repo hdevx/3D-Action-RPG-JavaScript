@@ -23,4 +23,4 @@ let DYNAMIC_CAMERA = false;
 
 
 // Graphics Settings
-let WEBGPU = true; //otherwise use WebGL
+let WEBGPU = false; //otherwise use WebGL
