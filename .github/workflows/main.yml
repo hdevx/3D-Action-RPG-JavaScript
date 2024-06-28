@@ -1,0 +1,23 @@
+name: Deploy to PythonAnywhere
+
+on:
+  push:
+    branches:
+      - main  # Or your default branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Copy repository to PythonAnywhere
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.PYTHONANYWHERE_USERNAME }}.pythonanywhere.com
+        username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
+        key: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
+        port: 22
+        source: "."
+        target: "/home/${{ secrets.PYTHONANYWHERE_USERNAME }}/RPG/mysite/frontend/RPG"
