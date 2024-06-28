@@ -22,7 +22,7 @@ export function setupCamera(scene, target, engine) {
 
     // if camera
     // setupCameraCollision(scene, camera, target);
-    setupCameraCollisionZoomInOnly(scene, camera, target);
+    // setupCameraCollisionZoomInOnly(scene, camera, target);
 
     setupTurnCamera(scene, camera, engine);
     return camera;

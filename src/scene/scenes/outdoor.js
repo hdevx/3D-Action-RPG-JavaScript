@@ -69,7 +69,7 @@ export async function createOutdoor(engine) {
 
     scene.executeWhenReady(() => {
         scene.render();
-        saveDepthMap(scene, engine);
+        // saveDepthMap(scene, engine);
     });
 
     return scene;

@@ -31,7 +31,10 @@
   </style>
 
   <script src="./lib/babylon.js"></script>
+
   <script src="./lib/babylon.inspector.bundle.js"></script>
+  <script src="./lib/babylon.gui.min.js"></script>
+
   <script src="./lib/babylonjs.loaders.min.js"></script>
   <script src="./lib/pep.js"></script>
 
@@ -42,21 +45,10 @@
 </head>
 
 <body>
-  <canvas id="renderCanvas" touch-action="none"></canvas>
   <!-- touch-action="none" for best results from PEP -->
-  <!-- todo check outdoor is working, then and remove these shader stubs -->
-  <script type="application/vertexShader" id="vertexShaderCode">
-
-  </script>
-
-  <script type="application/fragmentShader" id="fragmentShaderCode">
-
-
-  </script>
-
+  <canvas id="renderCanvas" touch-action="none"></canvas>
 
   <script src="./src/GLOBALS.js"></script>
-  <script src="./lib/babylon.gui.min.js"></script>
   <script type="module" src="game.js"></script>
 </body>
 
