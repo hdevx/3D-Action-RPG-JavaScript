@@ -7,7 +7,7 @@ Includes a scene manager to switch between levels.
 
 
 ## Demo
-[Play in your browser](www.rpgskilltreegenerator.com/RPG/index.html?scene=outdoor).
+[Play in your browser](https://www.rpgskilltreegenerator.com/RPG/index.html?scene=outdoor) instantly.
 
 ### Switching Demo Levels
 You can switch scenes by adding `index.html?scene=inn`, or `index.html?scene=outside`.
