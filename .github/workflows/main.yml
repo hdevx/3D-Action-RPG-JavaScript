@@ -18,7 +18,8 @@ jobs:
     - name: Create tarball of frontend files
       run: |
         mkdir -p temp_frontend
-        cp -R * temp_frontend/ || true
+        shopt -s extglob
+        cp -R !(temp_frontend) temp_frontend/ || true
         tar -czf frontend.tar.gz -C temp_frontend .
 
     - name: Upload files to PythonAnywhere
@@ -27,9 +28,9 @@ jobs:
         PA_USER: ${{ secrets.PYTHONANYWHERE_USERNAME }}
       run: |
         curl -X POST \
-        -H "Authorization: Token ${PA_TOKEN}" \
+        -H "Authorization: Token $PA_TOKEN" \
         -F "content=@frontend.tar.gz" \
-        https://www.pythonanywhere.com/api/v0/user/${PA_USER}/files/path/home/${PA_USER}/mysite/frontend/RPG/frontend.tar.gz
+        https://www.pythonanywhere.com/api/v0/user/$PA_USER/files/path/home/$PA_USER/mysite/frontend/RPG/frontend.tar.gz
 
     - name: Extract files on PythonAnywhere
       env:
