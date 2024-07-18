@@ -10,15 +10,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8  # Adjust this to match your PythonAnywhere Python version
+
     - name: Install PythonAnywhere CLI
-      run: pip install pythonanywhere
+      run: |
+        python -m pip install --upgrade pip
+        pip install pythonanywhere
 
     - name: Update frontend files on PythonAnywhere
       env:
         PA_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
         PA_USER: ${{ secrets.PYTHONANYWHERE_USERNAME }}
       run: |
-        pa_update_files.py \
+        python -m pythonanywhere.pa_update_files \
           --python=3.8 \
           --repo_url https://github.com/${{ github.repository }}.git \
           --repo_dir / \
