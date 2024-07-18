@@ -6,6 +6,7 @@ import { createUnderground } from './scenes/underground.js';
 import { createTown } from './scenes/town.js';
 import { createRoomGI } from './scenes/roomGI.js';
 import { createInn } from './scenes/inn.js';
+import { createBuilder } from './scenes/builder.js';
 
 class SceneManager {
   constructor(canvasId, engine) {
@@ -24,7 +25,8 @@ class SceneManager {
       underground: createUnderground,
       town: createTown,
       roomGI: createRoomGI,
-      inn: createInn
+      inn: createInn,
+      builder: createBuilder
     };
   }
 
@@ -71,16 +73,19 @@ class SceneManager {
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const sceneParam = urlParams.get('scene');
 
-    const sceneCreator = this.sceneCreators[sceneParam] || this.sceneCreators.inn; // Default to inn if no valid scene parameter
+    const debugParam = urlParams.get('debug');
+    if (debugParam === 'true') { DEBUG = true; }
+
+    const sceneParam = urlParams.get('scene');
+    const sceneCreator = this.sceneCreators[sceneParam] || this.sceneCreators.builder; // Default to builder if no valid scene parameter
 
     await this.loadScene(sceneCreator);
     await this.switchToScene(0);
+    // this.loadScene(createBuilder).then(() => {
+    //   this.switchToScene(0);
+    // });
 
-    this.loadScene(createInn).then(() => {
-      this.switchToScene(0);
-    });
 
     // Setup scene switching logic, e.g., based on user input or game events
     window.addEventListener('keydown', (e) => {
