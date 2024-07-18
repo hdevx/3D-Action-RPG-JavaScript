@@ -10,6 +10,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Verify environment variables
+      run: |
+        echo "PA_USER is: ${{ secrets.PYTHONANYWHERE_USERNAME }}"
+        echo "PA_TOKEN is set (not showing for security reasons)"
+
     - name: Create tarball of frontend files
       run: |
         mkdir -p temp_frontend
