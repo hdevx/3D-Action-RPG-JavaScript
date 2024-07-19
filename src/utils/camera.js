@@ -25,7 +25,11 @@ export function setupCamera(scene, target, engine) {
     // setupCameraCollisionZoomInOnly(scene, camera, target);
 
     setupTurnCamera(scene, camera, engine);
-    freeLeftClick(scene, camera);
+    if (isMobileDevice()) {
+        // keep the left click and drag to rotate the camera
+    } else {
+        freeLeftClick(scene, camera);
+    };
     return camera;
 }
 
@@ -259,6 +263,9 @@ function setupTurnCamera(scene, camera, engine) {
 // }
 // updateCameraBetaLimit();
 
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 
 // used in builder to make camera not intercept left click only
 function freeLeftClick(scene, camera) {
