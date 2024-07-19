@@ -41,6 +41,7 @@ jobs:
         -H "Authorization: Token $PA_TOKEN" \
         -H "Content-Type: application/json" \
         -d '{
-          "command": "cd /home/$PA_USER/mysite/frontend/RPG && tar -xzf frontend.tar.gz && rm frontend.tar.gz"
+          "executable": "$SHELL",
+          "arguments": ["-c", "cd /home/$PA_USER/mysite/frontend/RPG && tar -xzf frontend.tar.gz"]
         }' \
         https://www.pythonanywhere.com/api/v0/user/$PA_USER/consoles/
