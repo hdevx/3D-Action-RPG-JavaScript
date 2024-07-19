@@ -30,6 +30,12 @@ export async function setupPhysics(scene, spawnPoint) {
 
 
     havokInstance.HP_Body_SetPosition(dummyAggregate.body._pluginData.hpBodyId, [spawnPoint.x, spawnPoint.y, spawnPoint.z]);
+    dummyAggregate.resetToSpawn = function () {
+        havokInstance.HP_Body_SetPosition(dummyAggregate.body._pluginData.hpBodyId, [spawnPoint.x, spawnPoint.y, spawnPoint.z]);
+    };
+
+
+
 
     // dummyAggregate.body.setAxisFriction(BABYLON.HavokPlugin.LockConstraint, BABYLON.HavokPlugin.LINEAR_Y, 0);
     // camera.position.copyFrom(dummyPhysicsRoot.position)

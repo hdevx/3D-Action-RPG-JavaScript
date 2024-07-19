@@ -3,23 +3,25 @@ import { setupCamera } from '../../utils/camera.js';
 import { setupPhysics } from '../../utils/physics.js';
 import { setupInputHandling } from '../../movement.js';
 import { setupAnim } from '../../utils/anim.js';
+import { setupProcedural } from '../gen/procedural/procedural.js'
 import { loadingAnim } from '../../utils/loadingAnim.js'
 
 import { loadModels } from '../../utils/load.js';
 
 import { Health } from '../../character/health.js';
+import { setupWater } from '../../utils/water.js';
 
-export async function createInn(engine) {
+export async function createBuilder(engine) {
     const scene = new BABYLON.Scene(engine);
 
-    const spawnPoint = new BABYLON.Vector3(0, 80, 80);
+    const spawnPoint = new BABYLON.Vector3(0, 35, -25);
     const { character, dummyAggregate } = await setupPhysics(scene, spawnPoint);
 
     const camera = setupCamera(scene, character, engine);
     camera.collisionRadius = new BABYLON.Vector3(12.5, 12.5, 12.5);
     // load all models, make sure parallel loading for speed
     const modelUrls = [
-        "env/interior/inn/inn_map_procedural.glb"];
+        "env/builder/parts.glb"];
     const heroModelPromise = loadHeroModel(scene, character);
     const [heroModel, models] = await Promise.all([
         heroModelPromise,
@@ -35,6 +37,10 @@ export async function createInn(engine) {
     PLAYER = character;
 
     setupEnvironment(scene);
+    let LEVEL_SIZE = 20000;
+    camera.maxZ = LEVEL_SIZE;
+    // setupWater(scene, terrain, engine, hero, -2000, LEVEL_SIZE);
+    createSkydome(scene, LEVEL_SIZE);
 
     setupPostProcessing(scene, camera);
 
@@ -44,11 +50,10 @@ export async function createInn(engine) {
 
     let meshes = addRoomMap(scene, models);
     hero.getChildMeshes().forEach((value) => { meshes.push(value); });
-    // console.log(hero.getChildMeshes());
-
 
     setupLighting(scene);
 
+    setupBuilder(scene, engine, meshes);
 
     // // advanced lighting
     // // const spotLight = setupSpotlight(scene);
@@ -66,8 +71,49 @@ export async function createInn(engine) {
 
     // setupShadows(light, hero);
     loadingAnim(scene);
+
+    addZReset(scene, dummyAggregate, spawnPoint);
     return scene;
 }
+
+function addZReset(scene, dummyAggregate) {
+    scene.onBeforeRenderObservable.add(() => {
+        if (dummyAggregate.body.transformNode._absolutePosition.y < -180) {
+            console.log("reseting to spawn");
+            dummyAggregate.resetToSpawn();
+        }
+    });
+}
+
+function setupBuilder(scene, engine, meshes) {
+    // standard setup for different themes
+    // console.log(meshes);
+    let assignedMeshes = {
+        'floor': meshes[0],
+        'wall': [meshes[1], meshes[2]],
+        'clutter': [meshes[4], meshes[5], meshes[6]],
+    }
+    console.log(meshes);
+    assignedMeshes['clutter'][0].border = 10;
+    assignedMeshes['clutter'][1].border = 10;
+    assignedMeshes['clutter'][2].border = 10;
+    setupProcedural(scene, engine, assignedMeshes);
+
+}
+
+function createSkydome(scene) {
+    var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 8000.0 }, scene);
+    var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("./assets/textures/lighting/skybox", scene);
+    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    skybox.material = skyboxMaterial;
+
+    return skybox;
+}
+
 function setupGI(scene, engine, lights, meshes) {
     // TODO set defaultRSMTextureRatio to 30 for mobile 
     const defaultRSMTextureRatio = 8;
@@ -199,15 +245,15 @@ function setupGI(scene, engine, lights, meshes) {
 
 function addRoomMap(scene, models) {
     let meshes = [];
-    let town_map = models["inn_map_procedural"];
+    let parts = models["parts"];
     // let town_map = models["inn_map_procedural_individual"];
-    town_map.name = "inn map";
-    town_map.position.y = 10;
+    parts.name = "parts";
+    // parts.position.y = 10;
 
-    town_map.scaling = new BABYLON.Vector3(5, 5, 5);
+    parts.scaling = new BABYLON.Vector3(5, 5, 5);
 
 
-    town_map.getChildMeshes().forEach(mesh => {
+    parts.getChildMeshes().forEach(mesh => {
         mesh.material.metallic = 0;
         mesh.receiveShadows = true;
         // set levels

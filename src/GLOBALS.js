@@ -1,4 +1,4 @@
-const DEBUG = true;
+let DEBUG = false;
 
 let SCENE_MANAGER = {};
 

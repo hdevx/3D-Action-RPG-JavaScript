@@ -210,7 +210,7 @@ function handleClick() {
 }
 
 // mousedown versus click
-document.getElementById("renderCanvas").addEventListener('click', handleClick);
+// document.getElementById("renderCanvas").addEventListener('click', handleClick);
 
 
 window.addEventListener('keydown', onKeyDown);

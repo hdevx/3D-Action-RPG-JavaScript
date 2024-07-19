@@ -25,6 +25,7 @@ export function setupCamera(scene, target, engine) {
     // setupCameraCollisionZoomInOnly(scene, camera, target);
 
     setupTurnCamera(scene, camera, engine);
+    freeLeftClick(scene, camera);
     return camera;
 }
 
@@ -257,3 +258,11 @@ function setupTurnCamera(scene, camera, engine) {
 //     }
 // }
 // updateCameraBetaLimit();
+
+
+// used in builder to make camera not intercept left click only
+function freeLeftClick(scene, camera) {
+    // Modify pointer inputs
+    camera.inputs.attached.pointers.buttons = [1, 2]; // 0 = left, 1 = middle, 2 = right
+
+}
