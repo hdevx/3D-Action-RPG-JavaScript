@@ -10,11 +10,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Verify environment variables
-      run: |
-        echo "PA_USER is: ${{ secrets.PYTHONANYWHERE_USERNAME }} "
-        echo "PA_TOKEN is set (not showing for security reasons)"
-
     - name: Create tarball of frontend files
       run: |
         mkdir -p temp_frontend
@@ -37,11 +32,19 @@ jobs:
         PA_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
         PA_USER: ${{ secrets.PYTHONANYWHERE_USERNAME }}
       run: |
+        # First, create a new Bash console
+        CONSOLE_ID=$(curl -X POST \
+          -H "Authorization: Token $PA_TOKEN" \
+          -H "Content-Type: application/json" \
+          -d '{"executable": "bash"}' \
+          https://www.pythonanywhere.com/api/v0/user/$PA_USER/consoles/ \
+          | jq -r '.id')
+        
+        # Then, send the command to the console
         curl -X POST \
-        -H "Authorization: Token $PA_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d '{
-          "executable": "$SHELL",
-          "arguments": ["-c", "cd /home/$PA_USER/mysite/frontend/RPG && tar -xzf frontend.tar.gz"]
-        }' \
-        https://www.pythonanywhere.com/api/v0/user/$PA_USER/consoles/
+          -H "Authorization: Token $PA_TOKEN" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "input": "cd /home/'$PA_USER'/mysite/frontend/RPG && tar -xzf frontend.tar.gz"
+          }' \
+          https://www.pythonanywhere.com/api/v0/user/$PA_USER/consoles/$CONSOLE_ID/send_input/
