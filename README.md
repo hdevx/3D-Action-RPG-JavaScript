@@ -28,5 +28,5 @@ Make a code change, save the file, and watch as your change is immediatly live. 
 ## Contributing
 Please feel free to contribute or open an issue.
 
-## Support the project
-[Patreon](patreon.com/OpenRPGTools) or [join the discord](https://discord.gg/Df2H8UQtug).
+### Support the project
+[Patreon](https://www.patreon.com/OpenRPGTools) or [join the discord](https://discord.gg/Df2H8UQtug).
