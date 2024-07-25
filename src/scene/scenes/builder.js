@@ -111,6 +111,11 @@ function createSkydome(scene) {
     skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
     skybox.material = skyboxMaterial;
 
+    scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
+    scene.fogStart = 600.0; // Where the fog starts
+    scene.fogEnd = 6000.0;   // Where the fog completely obscures everything
+    scene.fogColor = new BABYLON.Color3(0.769, 0.86, 1); // Light grey fog
+
     return skybox;
 }
 
