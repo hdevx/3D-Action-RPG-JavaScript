@@ -10,11 +10,14 @@ import { loadModels } from '../../utils/load.js';
 
 import { Health } from '../../character/health.js';
 import { setupWater } from '../../utils/water.js';
+import { createBuilderSettings } from '../../utils/settings/builderSettings.js';
 
 export async function createBuilder(engine) {
     const scene = new BABYLON.Scene(engine);
 
-    const spawnPoint = new BABYLON.Vector3(0, 35, -25);
+    createBuilderSettings(); //Has side effects highlight outlines generated based on cell size at start
+
+    const spawnPoint = new BABYLON.Vector3(0, 35, -20);
     const { character, dummyAggregate } = await setupPhysics(scene, spawnPoint);
 
     const camera = setupCamera(scene, character, engine);
@@ -71,6 +74,8 @@ export async function createBuilder(engine) {
 
     // setupShadows(light, hero);
     loadingAnim(scene);
+
+
 
     addZReset(scene, dummyAggregate, spawnPoint);
     return scene;
