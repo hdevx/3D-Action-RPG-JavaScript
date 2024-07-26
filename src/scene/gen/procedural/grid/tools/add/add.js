@@ -3,7 +3,7 @@
 import { disposeAnimation, entryAnimationFloor } from "../../animations.js";
 import { cellSize } from "../../constants.js";
 import { removeAllWalls, updateCellAndSurronding } from "../../gridTracker.js";
-import { createFloor } from "../../place/floor.js";
+import { createFloor } from "../../place/floorM.js";
 import Tool from "../Tool.js";
 
 

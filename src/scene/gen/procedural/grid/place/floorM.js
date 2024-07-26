@@ -31,7 +31,5 @@ export function createFloor(scene, x, z, cellSize, meshes, removeFunction) {
         }
     }));
 
-
-
     return floor;
 }

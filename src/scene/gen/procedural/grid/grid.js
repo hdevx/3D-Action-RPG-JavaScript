@@ -1,7 +1,5 @@
-import { disposeAnimation, entryAnimationFloor, entryAnimationWall } from "./animations.js";
 import { cellSize, gridSize } from "./constants.js";
 import { updateCellAndSurronding, removeAllWalls, createGridTracker } from "./gridTracker.js";
-import { createFloor } from "./place/floor.js";
 import { createTools } from "./tools/tools.js";
 import { createHighlight, updateHighlight } from "./tools/visual/highlight.js";
 
