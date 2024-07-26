@@ -1,21 +1,21 @@
 
 
-import { entryAnimationFloor } from "../../animations.js";
+import { disposeAnimation, entryAnimationFloor } from "../../animations.js";
 import { cellSize } from "../../constants.js";
-import { updateCellAndSurronding } from "../../gridTracker.js";
+import { removeAllWalls, updateCellAndSurronding } from "../../gridTracker.js";
 import { createFloor } from "../../place/floor.js";
 import Tool from "../Tool.js";
+
 
 export default class Add extends Tool {
 
     click(xIndex, zIndex, gridTrackerIndex, gridTracker, clicked) {
-        console.log("add");
-        console.log(this);
         let floor = this.scene.getMeshByName(`floor_${xIndex}_${zIndex}`);
         if (!floor) {
-            let removeFunction = function () {
+            let removeFunction = () => {
                 disposeAnimation(this.scene, floor);
                 gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = false;
+                console.log("removing all walls");
                 removeAllWalls(gridTrackerIndex.x, gridTrackerIndex.z);
                 updateCellAndSurronding(gridTrackerIndex, this.meshes);
             };

@@ -13,6 +13,7 @@ let VFX = {};
 let SHADERS = {};
 
 
+let GRID = {};
 
 let targetBaseOnCameraView = true; // if false target based on character rotation
 // use touch joystick for mobile options

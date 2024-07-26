@@ -34,7 +34,8 @@ export function createTools(scene, meshes, gridTracker, grid) {
     tools.tools.raise = new Raise("Raise", scene, meshes, grid, tools, "./assets/util/ui/icons/tree.png", raiseSubTools);
 
     // Set the initial selected tool
-    tools.selectedTool = tools.tools.add;
+    tools.selectedTool = tools.tools.place;
+    console.log(tools);
 
 
     return tools;
