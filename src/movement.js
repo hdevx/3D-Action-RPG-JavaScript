@@ -1,7 +1,7 @@
 import { SPELLS } from './combat/SPELLS.js';
 
 export function setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate) {
-    let inputMap = {};
+    inputMap = {};
     scene.actionManager = new BABYLON.ActionManager(scene);
     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
         var key = evt.sourceEvent.key;
