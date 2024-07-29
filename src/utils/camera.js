@@ -13,10 +13,11 @@ export function setupCamera(scene, target, engine) {
 
     // More Professional Limited Camera, avoids collision
     camera.wheelDeltaPercentage = 0.0200;
-    camera.upperBetaLimit = 3.13;
+    // camera.upperBetaLimit = 3.13;
     camera.lowerRadiusLimit = 4;  // Minimum distance to target (closest zoom)
     camera.upperRadiusLimit = 656.8044;
     camera.upperBetaLimit = Math.PI / 2; // Stops at the horizon (90 degrees)
+    camera.lowerBetaLimit = (Math.PI / 2) * 0.01;  // Slightly below the top-down view
     camera.alpha = 4.954;
     camera.beta = 1.3437;
 
