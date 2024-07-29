@@ -11,13 +11,16 @@ import { loadModels } from '../../utils/load.js';
 import { Health } from '../../character/health.js';
 import { setupWater } from '../../utils/water.js';
 import { createBuilderSettings } from '../../utils/settings/builderSettings.js';
+import { setupMainPlayerMenu } from '../../character/interact/builderMenu.js';
+
+import { createMobileControls } from '../../utils/mobile/joystick.js';
 
 export async function createBuilder(engine) {
     const scene = new BABYLON.Scene(engine);
 
     createBuilderSettings(); //Has side effects highlight outlines generated based on cell size at start
 
-    const spawnPoint = new BABYLON.Vector3(0, 35, -20);
+    const spawnPoint = new BABYLON.Vector3(0, 40, -20);
     const { character, dummyAggregate } = await setupPhysics(scene, spawnPoint);
 
     const camera = setupCamera(scene, character, engine);
@@ -31,6 +34,8 @@ export async function createBuilder(engine) {
         loadModels(scene, modelUrls)
     ]);
     const { hero, skeleton } = heroModel;
+    setupMainPlayerMenu(scene);
+    createMobileControls(scene, camera, character);
 
     let anim = setupAnim(scene, skeleton);
     setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate);
@@ -93,17 +98,27 @@ function addZReset(scene, dummyAggregate) {
 function setupBuilder(scene, engine, meshes) {
     // standard setup for different themes
     // console.log(meshes);
+    const fm = name => meshes.find(mesh => mesh.name === name);
     let assignedMeshes = {
-        'floor': meshes[0],
-        'wall': [meshes[1], meshes[2]],
-        'clutter': [meshes[4], meshes[5], meshes[6]],
+        'floor': fm('Floor'),
+        'wall': [fm('1_WallWindow'), fm('2_WallWood')],
+        'clutter': [fm('0Barrel'), fm('1ChairGood'), fm('2Rug')],
+        'door': [fm('Door'), fm('2_WallWood')],
+        'base': [fm('StoneBase')],
+        'roof': {
+            'Roof_Wall': [fm('Roof_Wall')],
+            'Roof_Inset_Both': [fm('Roof_Inset_Both')],
+            'Roof_Inset_Left': [fm('Roof_Inset_Left')],
+            'Roof_Inset_Right': [fm('Roof_Inset_Right')],
+            'Roof_Outset_Both': [fm('Roof_Outset_Both')],
+            'Roof_Outset_Left': [fm('Roof_Outset_Left')],
+            'Roof_Outset_Right': [fm('Roof_Outset_Right')]
+        }
     }
-    console.log(meshes);
     assignedMeshes['clutter'][0].border = 10;
     assignedMeshes['clutter'][1].border = 10;
     assignedMeshes['clutter'][2].border = 10;
     setupProcedural(scene, engine, assignedMeshes);
-
 }
 
 function createSkydome(scene) {
@@ -124,134 +139,6 @@ function createSkydome(scene) {
     return skybox;
 }
 
-function setupGI(scene, engine, lights, meshes) {
-    // TODO set defaultRSMTextureRatio to 30 for mobile 
-    const defaultRSMTextureRatio = 8;
-    const defaultGITextureRatio = 2;
-
-    const outputDimensions = {
-        width: engine.getRenderWidth(true),
-        height: engine.getRenderHeight(true),
-    };
-
-    const rsmTextureDimensions = {
-        width: Math.floor(engine.getRenderWidth(true) / defaultRSMTextureRatio),
-        height: Math.floor(engine.getRenderHeight(true) / defaultRSMTextureRatio),
-    };
-
-    const giTextureDimensions = {
-        width: Math.floor(engine.getRenderWidth(true) / defaultGITextureRatio),
-        height: Math.floor(engine.getRenderHeight(true) / defaultGITextureRatio),
-    };
-
-
-    // high performance settings
-    // texture ratio 45
-    // radius 0.65   - 5.4 
-    // intesity 0.004
-    // edge artifact correction 0.41
-    // number of sampes 100-1000 - 
-    const giRSMs = [];
-
-    giRSMs.push(new BABYLON.GIRSM(new BABYLON.ReflectiveShadowMap(scene, lights[1], rsmTextureDimensions)));
-
-    giRSMs.forEach((girsm) => girsm.rsm.forceUpdateLightParameters = true); // for the demo, don't do this in production!
-
-    const giRSMMgr = new BABYLON.GIRSMManager(scene, outputDimensions, giTextureDimensions, 2048);
-
-    giRSMMgr.addGIRSM(giRSMs);
-
-    giRSMMgr.enable = true;
-
-    meshes.forEach((mesh) => {
-        giRSMs.forEach((girsm) => girsm.rsm.addMesh(mesh));
-        if (mesh.material) {
-            giRSMMgr.addMaterial(mesh.material);
-            // mesh.material.environmentIntensity = 0;
-            // mesh.material.directIntensity = 0;
-            mesh.material.emissiveColor = new BABYLON.Color3(0, 0, 0);
-
-
-            // ground for more natural spotlight
-            // mesh.material.metallic = 0.5;
-            // mesh.material.directIntensity = 0.0100;
-
-            // old starting levels for GI
-            mesh.material.metallic = 0.8;
-            mesh.material.roughness = 1.0;
-            mesh.material.directIntensity = 0.15;
-
-            // new inn lighting
-            mesh.material.metallic = 0.6;
-            mesh.material.roughness = 1.0;
-            mesh.material.directIntensity = 0.15;
-
-
-            // only GI 
-            // mesh.material.metallic = 0.0;
-            // mesh.material.roughness = 1.0;
-            // mesh.material.directIntensity = 0.09;
-
-            // mesh.scaling.x = -mesh.scaling.x;
-
-            // when not using gi, 
-            // mesh.material.metallic = 1.0;
-            // mesh.material.roughness = 1.0;
-            // mesh.material.directIntensity = 0.15;
-        }
-    });
-
-
-
-
-
-    giRSMMgr.giRSM.forEach((giRSM) => {
-        // Mixed GI and Normal
-        giRSM.numSamples = 400;
-        giRSM.intensity = 0.01;
-        giRSM.radius = 0.35;
-
-        // GI only
-        // giRSM.numSamples = 1000;
-        // giRSM.intensity = 0.001;
-        // giRSM.radius = 0.15;
-    });
-
-    // giRSMMgr.blurKernel = 20;
-
-    let guiParams = {
-        rsmTextureRatio: 8,
-        giTextureRatio: 2,
-    };
-
-    const resize = () => {
-        outputDimensions.width = engine.getRenderWidth(true);
-        outputDimensions.height = engine.getRenderHeight(true);
-
-        rsmTextureDimensions.width = Math.floor(engine.getRenderWidth(true) / guiParams.rsmTextureRatio);
-        rsmTextureDimensions.height = Math.floor(engine.getRenderHeight(true) / guiParams.rsmTextureRatio);
-
-        giTextureDimensions.width = Math.floor(engine.getRenderWidth(true) / guiParams.giTextureRatio);
-        giTextureDimensions.height = Math.floor(engine.getRenderHeight(true) / guiParams.giTextureRatio);
-
-        giRSMs.forEach((girsm) => girsm.rsm.setTextureDimensions(rsmTextureDimensions));
-        giRSMMgr.setOutputDimensions(outputDimensions);
-        giRSMMgr.setGITextureDimensions(giTextureDimensions);
-    };
-
-    engine.onResizeObservable.add(() => {
-        resize();
-    });
-
-    resize();
-
-
-    GIDebug(scene, giRSMMgr, engine);
-
-
-
-
-}
 
 function addRoomMap(scene, models) {
     let meshes = [];
@@ -262,6 +149,7 @@ function addRoomMap(scene, models) {
 
     parts.scaling = new BABYLON.Vector3(5, 5, 5);
 
+    parts.position.y = -100;
 
     parts.getChildMeshes().forEach(mesh => {
         mesh.material.metallic = 0;
@@ -269,11 +157,27 @@ function addRoomMap(scene, models) {
         // set levels
         meshes.push(mesh);
 
+        if (mesh.name === "Floor") {
+            mesh.position.y = 100 / 5 + 0.023;
+        }
+        if (mesh.name === "2Rug") {
+            mesh.position.y = 100 / 5 + 0.03;
+        }
+        if (mesh.name === "1ChairGood") {
+            mesh.position.y = 100 / 5 + 0.023;
+            mesh.position.x = 5;
+            mesh.position.z = 3;
+            mesh.rotation = new BABYLON.Vector3(0, -1.3, 0);
+        }
+
+
         let town_mapCollision = new BABYLON.PhysicsAggregate(mesh, BABYLON.PhysicsShapeType.MESH, { mass: 0, restitution: 0.0, friction: 1.0 }, scene);
 
     });
 
     scene.physicsEnabled = true;
+
+
 
     return meshes;
 }
@@ -291,170 +195,7 @@ async function LoadLiLGUI() {
     return BABYLON.Tools.LoadScriptAsync("https://cdn.jsdelivr.net/npm/lil-gui@0.17.0/dist/lil-gui.umd.min.js");
 }
 
-async function GIDebug(scene, giRSMMgr, engine) {
-    await LoadLiLGUI();
 
-    const gui = new lil.GUI({ title: "RSM Global Illumination" });
-
-    gui.domElement.style.marginTop = "60px";
-    // gui.domElement.id = domElementName;
-
-
-    const firstRSMParams = giRSMMgr.giRSM[0];
-    let guiInputs = {
-        rsmTextureRatio: 8,
-        giTextureRatio: 2,
-    }
-    const params = {
-        // Global
-        enabled: giRSMMgr.enable,
-        fxaa: true,
-        disableShadows: false,
-
-        // RSM
-        rsmTextureRatio: guiInputs.rsmTextureRatio,
-
-        // // GI
-        useFullRSMTexture: firstRSMParams.useFullTexture,
-        radius: firstRSMParams.radius,
-        intensity: firstRSMParams.intensity,
-        edgeArtifactCorrection: firstRSMParams.edgeArtifactCorrection,
-        numSamples: firstRSMParams.numSamples,
-        rotateSamples: firstRSMParams.rotateSample,
-        noiseFactor: firstRSMParams.noiseFactor,
-        giTextureRatio: guiInputs.giTextureRatio,
-        giTextureType: giRSMMgr.giTextureType,
-        showOnlyGI: giRSMMgr.showOnlyGI,
-
-        // // GI - Blur
-        enableBlur: giRSMMgr.enableBlur,
-        blurKernel: giRSMMgr.blurKernel,
-        bilateralBlurDepthThreshold: giRSMMgr.blurDepthThreshold,
-        bilateralBlurNormalThreshold: giRSMMgr.blurNormalThreshold,
-        useQualityBilateralBlur: giRSMMgr.useQualityBlur,
-        fullSizeBlur: giRSMMgr.fullSizeBlur,
-        bilateralUpsamplerKernel: giRSMMgr.upsamplerKernel,
-        useQualityBilateralUpsampling: giRSMMgr.useQualityUpsampling,
-
-        // GPU timings
-        counter: "",
-    };
-
-    // gui
-    //     .add(params, "disableShadows")
-    //     .name("Disable shadows")
-    //     .onChange((value) => {
-    //         console.log(giRSMMgr);
-    //         giRSMMgr.giRSM.forEach((girsm) => girsm.rsm.light.shadowEnabled = !value);
-    //         if (!checkCounterList()) {
-    //             createGPUTimingsGUI();
-    //         }
-    //     });
-    gui
-        .add(params, "rsmTextureRatio", 1, 60, 1)
-        .name("Texture ratio")
-        .onChange((value) => {
-            giRSMMgr.giRSM.forEach((girsm) => girsm.rsm.setTextureDimensions({
-                width: Math.floor(engine.getRenderWidth(true) / value),
-                height: Math.floor(engine.getRenderHeight(true) / value),
-            }));
-        });
-
-
-
-    gui
-        .add(params, "enabled")
-        .name("Enabled")
-        .onChange((value) => {
-            giRSMMgr.enable = value;
-        });
-
-    let fxaa = null;
-    gui
-        .add(params, "fxaa")
-        .name("FXAA")
-        .onChange((value) => {
-            fxaa?.dispose();
-            fxaa = null;
-            if (value) {
-                fxaa = new BABYLON.FxaaPostProcess("fxaa", 1, scene.activeCamera);
-            }
-        });
-
-    gui
-        .add(params, "showOnlyGI")
-        .name("Show only GI")
-        .onChange((value) => {
-            giRSMMgr.showOnlyGI = value;
-        });
-
-    gui
-        .add(params, "radius", 0, 6, 0.01)
-        .name("Radius")
-        .onChange((value) => {
-            giRSMMgr.giRSM.forEach((girsm) => girsm.radius = value);
-        });
-
-    gui
-        .add(params, "intensity", 0, 1, 0.001)
-        .name("Intensity")
-        .onChange((value) => {
-            giRSMMgr.giRSM.forEach((girsm) => girsm.intensity = value);
-        });
-
-    gui
-        .add(params, "edgeArtifactCorrection", 0, 1, 0.01)
-        .name("Edge artifact correction")
-        .onChange((value) => {
-            giRSMMgr.giRSM.forEach((girsm) => girsm.edgeArtifactCorrection = value);
-        });
-
-    gui
-        .add(params, "numSamples", 16, 2048, 16)
-        .name("Number of samples")
-        .onChange((value) => {
-            giRSMMgr.giRSM.forEach((girsm) => girsm.numSamples = value);
-        });
-
-    gui
-        .add(params, "rotateSamples")
-        .name("Rotate samples")
-        .onChange((value) => {
-            giRSMMgr.giRSM.forEach((girsm) => girsm.rotateSample = value);
-        });
-
-    gui
-        .add(params, "noiseFactor", 0, 1000, 0.1)
-        .name("Noise factor")
-        .onChange((value) => {
-            giRSMMgr.giRSM.forEach((girsm) => girsm.noiseFactor = value);
-        });
-
-    gui
-        .add(params, "enableBlur")
-        .name("Enable Blur")
-        .onChange((value) => {
-            giRSMMgr.enableBlur = value;
-        });
-    gui
-        .add(params, "blurKernel", 1, 64, 1)
-        .name("Blur kernel")
-        .onChange((value) => {
-            giRSMMgr.blurKernel = value;
-        });
-    gui
-        .add(params, "useQualityBilateralBlur")
-        .name("Use quality blur")
-        .onChange((value) => {
-            giRSMMgr.useQualityBlur = value;
-        });
-
-
-    // giRSMMgr.enable = true;
-    // giRSMMgr.showOnlyGI = true;
-
-    return guiInputs;
-}
 
 function setupSpotlight(scene) {
     // Create a spotlight

@@ -45,7 +45,8 @@ async function getLLMJSONDummyData() {
     return jsonObject;
 }
 
-const groqApiKey = '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';
+//Use your own but be careful to not commit the key
+const groqApiKey = 'your_key_here';
 async function getLLMJSON(systemPrompt, userPrompt) {
     try {
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {

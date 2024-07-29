@@ -72,8 +72,8 @@ export async function createDayDynamicTerrain(engine) {
         "hpbar",
         scene,
         {
-            vertex: "../shaders/hp/hp",
-            fragment: "../shaders/hp/hp",
+            vertex: "../../../shaders/hp/hp",
+            fragment: "../../../shaders/hp/hp",
         },
         {
             attributes: ["position", "normal", "uv"],

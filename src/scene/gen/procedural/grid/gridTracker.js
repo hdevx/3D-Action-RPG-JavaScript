@@ -1,5 +1,6 @@
 import { entryAnimationWall } from "./animations.js";
 import { cellSize, gridSize } from "./constants.js";
+import { createWall2Story } from "./place/wall/wall.js";
 
 
 // Example usage
@@ -40,20 +41,32 @@ function updateWallsForCell(x, z) {
         // wallMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.3, 0.3);
     }
 
+
     ['north', 'south', 'east', 'west'].forEach(direction => {
         const neighbor = getNeighbor(x, z, direction);
         const wallKey = `${key}_wall_${direction}`;
         let wall = scene.getMeshByName(wallKey);
         if (neighbor === false) {
-            if (!wall) {
-                wall = createWall(scene, x, z, direction, cellSize, key);
-                entryAnimationWall(scene, wall);
-            }
+            // if (building.hasRoof) {}
+            // if (!wall) {
+            //     const cornerInfo = detectCorner(x, z, direction);
+            //     wall = createWall2Story(x, z, direction, cellSize, key, cornerInfo);
+            //     entryAnimationWall(scene, wall);
+            // }
+
+            // need for surronding roofs refresh, use above instead if no roof
+            // console.log("building new wall" + key);
+            wall?.dispose();
+            const cornerInfo = detectCorner(x, z, direction);
+            wall = createWall2Story(x, z, direction, cellSize, key, cornerInfo);
+            entryAnimationWall(scene, wall);
+
         } else {
             wall?.dispose();
         }
     });
 }
+
 
 export function removeAllWalls(x, z) {
     ['north', 'south', 'east', 'west'].forEach(direction => {
@@ -68,64 +81,33 @@ export function removeAllWalls(x, z) {
 }
 
 // Function to get the filled status of a neighboring cell
+// function getNeighbor(x, z, direction) {
+//     let nx = x, nz = z;
+//     switch (direction) {
+//         case 'north': nz -= 1; break;
+//         case 'south': nz += 1; break;
+//         case 'east': nx += 1; break;
+//         case 'west': nx -= 1; break;
+//     }
+//     if (nx < 0 || nx >= gridSize || nz < 0 || nz >= gridSize) return false; // Out of bounds is like an empty cell
+//     return gridTracker[nx][nz];
+// }
+
+
 function getNeighbor(x, z, direction) {
     let nx = x, nz = z;
+    if (typeof x === 'object') {
+        nx = x.x;
+        nz = x.z;
+    }
     switch (direction) {
         case 'north': nz -= 1; break;
         case 'south': nz += 1; break;
         case 'east': nx += 1; break;
         case 'west': nx -= 1; break;
     }
-    if (nx < 0 || nx >= gridSize || nz < 0 || nz >= gridSize) return false; // Out of bounds is like an empty cell
+    if (nx < 0 || nx >= gridSize || nz < 0 || nz >= gridSize) return false;
     return gridTracker[nx][nz];
-}
-
-// Function to create a wall in a specific direction
-function createWall(scene, x, z, direction, size, key) {
-    const wall = meshes['wall'][0].clone(`${key}_wall_${direction}`);
-    wall.isPickable = false;
-    wall.parent = null;
-    // const wall = BABYLON.MeshBuilder.CreateBox(`${key}_wall_${direction}`, { width: size, height: 20, depth: 1 }, scene);
-    // positions for using mesh builder
-    // case 'north':
-    //     wall.position = new BABYLON.Vector3(x * size + size / 2 - totalGridOffset, 20, z * size - totalGridOffset);
-    //     wall.rotation = new BABYLON.Vector3(0, 0, 0);
-    //     break;
-    // case 'south':
-    //     wall.position = new BABYLON.Vector3(x * size + size / 2 - totalGridOffset, 20, z * size + size - totalGridOffset);
-    //     wall.rotation = new BABYLON.Vector3(0, Math.PI, 0);
-    //     break;
-    // case 'east':
-    //     wall.position = new BABYLON.Vector3(x * size + size - totalGridOffset, 20, z * size + size / 2 - totalGridOffset);
-    //     wall.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
-    //     break;
-    // case 'west':
-    //     wall.position = new BABYLON.Vector3(x * size - totalGridOffset, 20, z * size + size / 2 - totalGridOffset);
-    //     wall.rotation = new BABYLON.Vector3(0, -Math.PI / 2, 0);
-    //     break;
-    wall.scaling.x = 0;
-    wall.scaling.y = 0;
-    wall.scaling.z = 0;
-    let totalGridOffset = gridSize * cellSize / 2;
-    switch (direction) {
-        case 'north':
-            wall.position = new BABYLON.Vector3(x * size + size / 2 - totalGridOffset + 10, 20, z * size - totalGridOffset - cellSize / 2);
-            wall.rotation = new BABYLON.Vector3(-Math.PI / 2, 0, 0);
-            break;
-        case 'south':
-            wall.position = new BABYLON.Vector3(x * size + size / 2 - totalGridOffset - 10, 20, z * size + size - totalGridOffset + cellSize / 2);
-            wall.rotation = new BABYLON.Vector3(-Math.PI / 2, Math.PI, 0);
-            break;
-        case 'east':
-            wall.position = new BABYLON.Vector3(x * size + size - totalGridOffset - cellSize / 2, 20, z * size + size / 2 - totalGridOffset - 10);
-            wall.rotation = new BABYLON.Vector3(-Math.PI / 2, Math.PI / 2, 0);
-            break;
-        case 'west':
-            wall.position = new BABYLON.Vector3(x * size - totalGridOffset + cellSize / 2, 20, z * size + size / 2 - totalGridOffset + 10);
-            wall.rotation = new BABYLON.Vector3(-Math.PI / 2, -Math.PI / 2, 0);
-            break;
-    }
-    return wall;
 }
 
 export function updateCellAndSurronding(gridTrackerIndex) {
@@ -140,4 +122,113 @@ export function updateCellAndSurronding(gridTrackerIndex) {
     updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z + 1);
     updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z);
     updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z - 1);
+}
+
+// export function updateCellAndSurronding(gridTrackerIndex) {
+//     for (let x = -2; x <= 2; x++) {
+//         for (let z = -2; z <= 2; z++) {
+//             updateWallsForCell(gridTrackerIndex.x + x, gridTrackerIndex.z + z);
+//         }
+//     }
+// }
+
+
+
+// function detectCorner(x, z, direction) {
+//     const left = getLeftDirection(direction);
+//     const right = getRightDirection(direction);
+
+//     const frontLeft = getNeighbor(x, z, direction) && getNeighbor(x, z, left);
+//     const frontRight = getNeighbor(x, z, direction) && getNeighbor(x, z, right);
+//     const backLeft = !getNeighbor(x, z, direction) && getNeighbor(x, z, left);
+//     const backRight = !getNeighbor(x, z, direction) && getNeighbor(x, z, right);
+
+//     if (frontLeft && !frontRight) return { isCorner: true, side: 'left', type: 'outset' };
+//     if (!frontLeft && frontRight) return { isCorner: true, side: 'right', type: 'outset' };
+//     if (backLeft && !backRight) return { isCorner: true, side: 'left', type: 'inset' };
+//     if (!backLeft && backRight) return { isCorner: true, side: 'right', type: 'inset' };
+
+//     return { isCorner: false };
+// }
+
+function detectCorner(x, z, direction) {
+    const leftDir = getLeftDirection(direction);
+    const rightDir = getRightDirection(direction);
+
+    const front = getNeighbor(x, z, direction);
+    const frontLeft = getNeighbor(x, z, direction) && getNeighbor(x, z, leftDir);
+    const frontRight = getNeighbor(x, z, direction) && getNeighbor(x, z, rightDir);
+    const backLeft = gridTracker[getBackLeftCoordinates(x, z, direction).x][getBackLeftCoordinates(x, z, direction).z];
+    const backRight = gridTracker[getBackRightCoordinates(x, z, direction).x][getBackRightCoordinates(x, z, direction).z];
+
+    const left = getNeighbor(x, z, leftDir);
+    const right = getNeighbor(x, z, rightDir);
+
+    let cornerInfo = {
+        left: { isCorner: false, type: null },
+        right: { isCorner: false, type: null }
+    };
+
+    // Check left side
+    if (!front && !left) {
+        cornerInfo.left.isCorner = true;
+        cornerInfo.left.type = 'inset';
+    }
+
+    // Check right side
+    if (!front && !right) {
+        cornerInfo.right.isCorner = true;
+        cornerInfo.right.type = 'inset';
+    }
+
+    if (backLeft && !backRight) {
+        cornerInfo.left.isCorner = true;
+        cornerInfo.left.type = 'outset';
+        cornerInfo.debug = true;
+    }
+    if (backRight && !backLeft) {
+        cornerInfo.right.isCorner = true;
+        cornerInfo.right.type = 'outset';
+        cornerInfo.debug = true;
+    }
+    if (backRight && backLeft) {
+        cornerInfo.left.isCorner = true;
+        cornerInfo.right.isCorner = true;
+        cornerInfo.left.type = 'outset';
+        cornerInfo.right.type = 'outset';
+        cornerInfo.debug = true;
+    }
+
+
+    return cornerInfo;
+}
+
+function getBackLeftCoordinates(x, z, direction) {
+    switch (direction) {
+        case 'north': return { x: x - 1, z: z - 1 };
+        case 'south': return { x: x + 1, z: z + 1 };
+        case 'east': return { x: x + 1, z: z - 1 };
+        case 'west': return { x: x - 1, z: z + 1 };
+    }
+}
+
+function getBackRightCoordinates(x, z, direction) {
+    switch (direction) {
+        case 'north': return { x: x + 1, z: z - 1 };
+        case 'south': return { x: x - 1, z: z + 1 };
+        case 'east': return { x: x + 1, z: z + 1 };
+        case 'west': return { x: x - 1, z: z - 1 };
+    }
+}
+
+function getLeftDirection(direction) {
+    const directions = ['north', 'west', 'south', 'east'];
+    const index = directions.indexOf(direction);
+    return directions[(index + 1) % 4];
+}
+
+function getRightDirection(direction) {
+    const directions = ['north', 'east', 'south', 'west'];
+    const index = directions.indexOf(direction);
+    return directions[(index + 1) % 4];
 }

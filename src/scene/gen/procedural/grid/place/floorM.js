@@ -2,7 +2,9 @@ export function createFloor(scene, x, z, cellSize, meshes, removeFunction) {
 
     let FLOOR_DEBUG = false;
 
-    let floor = meshes['floor'].clone("floor_clone");
+    // let floor = meshes['floor'].clone("floor_clone");
+    let floor = meshes['floor'].createInstance("floor_instance");
+
     floor.remove = removeFunction;
 
     floor.parent = null;
@@ -31,5 +33,8 @@ export function createFloor(scene, x, z, cellSize, meshes, removeFunction) {
         }
     }));
 
+
+
     return floor;
 }
+

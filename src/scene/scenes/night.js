@@ -79,8 +79,8 @@ export async function createNight(engine) {
         "hpbar",
         scene,
         {
-            vertex: "../shaders/hp/hp",
-            fragment: "../shaders/hp/hp",
+            vertex: "../../../shaders/hp/hp",
+            fragment: "../../../shaders/hp/hp",
         },
         {
             attributes: ["position", "normal", "uv"],

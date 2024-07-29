@@ -475,8 +475,8 @@ function setupPostProcessing(scene, camera) {
 
 function createTrail(scene, engine, objectToAttach, diameter, segments, offset, rotation, scale) {
     const fireTrailShader = new BABYLON.ShaderMaterial("fireTrail", scene, {
-        vertex: "../shaders/vfx/trail_sword",
-        fragment: "../shaders/vfx/trail_sword",
+        vertex: "../../../shaders/vfx/trail_sword",
+        fragment: "../../../shaders/vfx/trail_sword",
     }, {
         attributes: ["position", "normal", "uv"],
         uniforms: ["world", "worldViewProjection", "view", "projection", "time"],

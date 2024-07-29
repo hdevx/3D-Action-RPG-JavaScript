@@ -6,13 +6,21 @@ import { createHighlight, updateHighlight } from "./tools/visual/highlight.js";
 
 export function createGrid(scene, meshes) {
 
+    let options = { width: gridSize * cellSize, height: gridSize * cellSize, subdivisions: gridSize };
+    const grid = BABYLON.MeshBuilder.CreateGround('grid', options, scene);
 
-    const grid = BABYLON.MeshBuilder.CreateGround('grid', { width: gridSize * cellSize, height: gridSize * cellSize, subdivisions: gridSize }, scene);
+    MESH_LIBRARY = meshes;
     GRID = grid;
+
+    // const body = new BABYLON.PhysicsBody(GRID, BABYLON.PhysicsMotionType.STATIC, false, scene);
+    GRID.groundAggregate = new BABYLON.PhysicsAggregate(GRID, BABYLON.PhysicsShapeType.MESH, { mass: 0, restitution: 0.0, friction: 1000000000.8 }, scene);
+    // body.shape = this.terrainShape;
+
+    // addNonTilingColor(grid);
     let gridMaterial = new BABYLON.StandardMaterial("Selection_Grid_Mat", scene);
     // Create an invisible grid
-    // gridMaterial.alpha = 0;
-    // gridMaterial.wireframe = true;
+    gridMaterial.alpha = 0;
+    gridMaterial.wireframe = true;
     if (DEBUG) {
         gridMaterial.alpha = 1;
         gridMaterial.wireframe = true;
@@ -34,64 +42,80 @@ export function createGrid(scene, meshes) {
     let tools = createTools(scene, meshes, gridTracker, grid);
 
     // Player starts on this cell, the mesh is already filled in. 
-    gridTracker[Math.floor(gridSize / 2)][Math.floor(gridSize / 2)] = true; // Fill a cell
+    // gridTracker[Math.floor(gridSize / 2)][Math.floor(gridSize / 2)] = true; // Fill a cell
 
     function convert(x, z) {
         return { 'x': x + Math.floor(gridSize / 2), 'z': z + Math.floor(gridSize / 2) };
     }
 
     // Grid Input Actions //
-    grid.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, (evt) => {
-        const pickedPoint = evt.additionalData.pickedPoint;
-        if (!pickedPoint) return;
+    // grid.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, (evt) => {
+    //     if (ON_MOBILE) {
+    //         const { width, height } = scene.getEngine().getRenderingCanvas();
+    //         if (evt.pointerY >= height * 0.6) {
+    //             console.log("clicked bottom");
+    //             CANVASES[1].style.zIndex = 1;
+    //             return;
+    //         }
+    //     }
+    //     const pickedPoint = evt.additionalData.pickedPoint;
+    //     if (!pickedPoint) return;
 
-        const xIndex = Math.round(pickedPoint.x / cellSize);
-        const zIndex = Math.round(pickedPoint.z / cellSize);
-        let gridTrackerIndex = convert(xIndex, zIndex);
-        console.log(`Clicked gridTrackerIndex: (${gridTrackerIndex.x}, ${gridTrackerIndex.z})`);
-        console.log(`Clicked cell center: (${xIndex}, ${zIndex})`);
+    //     const xIndex = Math.round(pickedPoint.x / cellSize);
+    //     const zIndex = Math.round(pickedPoint.z / cellSize);
+    //     let gridTrackerIndex = convert(xIndex, zIndex);
+    //     // console.log(`Clicked gridTrackerIndex: (${gridTrackerIndex.x}, ${gridTrackerIndex.z})`);
+    //     // console.log(`Clicked cell center: (${xIndex}, ${zIndex})`);
 
-        // Create or remove the floor mesh based on click type
-        if (evt.sourceEvent.button === 0) { // Left click
-            // Do current Selected Tool
-            tools.selectedTool.click(xIndex, zIndex, gridTrackerIndex, gridTracker, pickedPoint);
+    //     // Create or remove the floor mesh based on click type
+    //     if (evt.sourceEvent.button === 0) { // Left click
+    //         // Do current Selected Tool
+    //         tools.selectedTool.click(xIndex, zIndex, gridTrackerIndex, gridTracker, pickedPoint);
 
-            // let floor = scene.getMeshByName(`floor_${xIndex}_${zIndex}`);
-            // if (!floor) {
-            //     let removeFunction = function () {
-            //         disposeAnimation(scene, floor);
-            //         gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = false;
-            //         removeAllWalls(gridTrackerIndex.x, gridTrackerIndex.z);
-            //         updateCellAndSurronding(gridTrackerIndex, meshes);
-            //     };
-            //     floor = createFloor(scene, xIndex, zIndex, cellSize, meshes, removeFunction);
-            //     // Position at the exact center of the cell
-            //     floor.position = new BABYLON.Vector3((xIndex + 0.5) * cellSize - cellSize / 2, 0.1, (zIndex + 0.5) * cellSize - cellSize / 2);
+    //         // let floor = scene.getMeshByName(`floor_${xIndex}_${zIndex}`);
+    //         // if (!floor) {
+    //         //     let removeFunction = function () {
+    //         //         disposeAnimation(scene, floor);
+    //         //         gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = false;
+    //         //         removeAllWalls(gridTrackerIndex.x, gridTrackerIndex.z);
+    //         //         updateCellAndSurronding(gridTrackerIndex, meshes);
+    //         //     };
+    //         //     floor = createFloor(scene, xIndex, zIndex, cellSize, meshes, removeFunction);
+    //         //     // Position at the exact center of the cell
+    //         //     floor.position = new BABYLON.Vector3((xIndex + 0.5) * cellSize - cellSize / 2, 0.1, (zIndex + 0.5) * cellSize - cellSize / 2);
 
-            //     let completeFunction = function () {
-            //         gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = true;
-            //         updateCellAndSurronding(gridTrackerIndex, meshes);
-            //     }
-            //     floor.completeFunction = completeFunction;
-            //     entryAnimationFloor(scene, floor, meshes);
+    //         //     let completeFunction = function () {
+    //         //         gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = true;
+    //         //         updateCellAndSurronding(gridTrackerIndex, meshes);
+    //         //     }
+    //         //     floor.completeFunction = completeFunction;
+    //         //     entryAnimationFloor(scene, floor, meshes);
 
 
-            // }
-        }//  else if (evt.sourceEvent.button === 2) { // Right click
-        //     const floor = scene.getMeshByName(`floor_${x}_${z}`);
-        //     if (floor) {
-        //         // Scale down and remove
-        //         floor.scaling = new BABYLON.Vector3(0, 0, 0); // Animate this for a smoother effect
-        //         setTimeout(() => floor.dispose(), 300); // Delay to show scaling
-        //     }
-        // }
-    }));
+    //         // }
+    //     }//  else if (evt.sourceEvent.button === 2) { // Right click
+    //     //     const floor = scene.getMeshByName(`floor_${x}_${z}`);
+    //     //     if (floor) {
+    //     //         // Scale down and remove
+    //     //         floor.scaling = new BABYLON.Vector3(0, 0, 0); // Animate this for a smoother effect
+    //     //         setTimeout(() => floor.dispose(), 300); // Delay to show scaling
+    //     //     }
+    //     // }
+    // }));
 
 
 
     //  Grid Pointer Held //
     let leftHeldDown = false;
     scene.onPointerObservable.add((pointerInfo) => {
+        if (ON_MOBILE) {
+            const { width, height } = scene.getEngine().getRenderingCanvas();
+            if (pointerInfo.event.clientY >= height * 0.6) {
+                console.log("clicked bottom");
+                CANVASES[1].style.zIndex = 1;
+                return;
+            }
+        }
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
             if (pointerInfo.event.button == 0) leftHeldDown = true;
         }
@@ -110,8 +134,8 @@ export function createGrid(scene, meshes) {
                 const zIndex = Math.round(pickedPoint.z / cellSize);
                 let gridTrackerIndex = convert(xIndex, zIndex);
                 if (gridTracker[gridTrackerIndex.x][gridTrackerIndex.z]) { return; } //don't place while already filling
-                console.log(`Clicked gridTrackerIndex: (${gridTrackerIndex.x}, ${gridTrackerIndex.z})`);
-                console.log(`Clicked cell center: (${xIndex}, ${zIndex})`);
+                // console.log(`Clicked gridTrackerIndex: (${gridTrackerIndex.x}, ${gridTrackerIndex.z})`);
+                // console.log(`Clicked cell center: (${xIndex}, ${zIndex})`);
 
                 // if (evt.sourceEvent.button === 0) { // Left click
                 tools.selectedTool.click(xIndex, zIndex, gridTrackerIndex, gridTracker, pickedPoint);
@@ -147,7 +171,34 @@ export function createGrid(scene, meshes) {
 
 }
 
+function addNonTilingColor(grid) {
+    // Access the vertex data
+    const geometry = grid.getGeometry();
+    const positions = geometry.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+    const indices = geometry.getIndices();
 
+    // Create an array to hold the colors
+    const colors = new Array(positions.length / 3 * 4); // 4 color components per vertex (RGBA)
+
+    // Fill the colors array with random greyscale values
+    for (let i = 0; i < positions.length / 3; i++) {
+        // Generate a random greyscale value
+        const grey = Math.random();
+
+        // Assign the same grey value to R, G, B channels, and set alpha to 1 (opaque)
+        colors[i * 4] = grey;     // Red
+        colors[i * 4 + 1] = grey; // Green
+        colors[i * 4 + 2] = grey; // Blue
+        colors[i * 4 + 3] = 1;    // Alpha
+    }
+
+    // Set the colors to the geometry
+    geometry.setVerticesData(BABYLON.VertexBuffer.ColorKind, colors, true);
+
+    // Apply the geometry to the mesh
+    grid.refreshBoundingInfo();
+    grid.computeWorldMatrix(true);
+}
 
 
 

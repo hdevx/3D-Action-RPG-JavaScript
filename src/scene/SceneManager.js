@@ -45,7 +45,6 @@ class SceneManager {
     this.scenes.push(scene);
     this.guiTextures.set(scene, new BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene));
     this.activeGUI = this.guiTextures.get(this.activeScene);
-
     return scene;
   }
 
@@ -78,25 +77,28 @@ class SceneManager {
     if (debugParam === 'true') { DEBUG = true; }
 
     const sceneParam = urlParams.get('scene');
-    const sceneCreator = this.sceneCreators[sceneParam] || this.sceneCreators.builder; // Default to builder if no valid scene parameter
+    const defaultScene = this.sceneCreators[sceneParam] || this.sceneCreators.outdoor; // Default to outdoor if no valid scene parameter
 
-    await this.loadScene(sceneCreator);
+    await this.loadScene(defaultScene);
     await this.switchToScene(0);
+
     // this.loadScene(createBuilder).then(() => {
     //   this.switchToScene(0);
     // });
 
-
+    // Uncomment this for key based scene switching. 
+    // await this.loadScene(this.sceneCreators['inn']);
+    // await this.loadScene(this.sceneCreators['builder']);
     // Setup scene switching logic, e.g., based on user input or game events
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'i') {
-        this.switchToScene(0);
-      } else if (e.key === 'o') {
-        this.switchToScene(1);
-      } else if (e.key === 'p') {
-        this.switchToScene(2);
-      }
-    });
+    // window.addEventListener('keydown', (e) => {
+    //   if (e.key === 'i') {
+    //     this.switchToScene(0);
+    //   } else if (e.key === 'o') {
+    //     this.switchToScene(1);
+    //   } else if (e.key === 'p') {
+    //     this.switchToScene(2);
+    //   }
+    // });
 
     window.addEventListener('resize', () => {
       this.engine.resize();

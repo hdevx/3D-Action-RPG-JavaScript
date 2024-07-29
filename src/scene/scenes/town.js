@@ -231,8 +231,8 @@ function loadHPModels(scene, engine, HPBar) {
         "hpbar",
         scene,
         {
-            vertex: "../shaders/hp/hp",
-            fragment: "../shaders/hp/hp",
+            vertex: "../../../shaders/hp/hp",
+            fragment: "../../../shaders/hp/hp",
         },
         {
             attributes: ["position", "normal", "uv"],
@@ -310,8 +310,8 @@ function addFireball(scene, engine) {
 
 function addShaders(scene, engine) {
     var orbMaterial = new BABYLON.ShaderMaterial("orb", scene, {
-        vertex: "../shaders/vfx/orb",
-        fragment: "../shaders/vfx/orb"
+        vertex: "../../../shaders/vfx/orb",
+        fragment: "../../../shaders/vfx/orb"
     }, {
         attributes: ["position", "uv"],
         uniforms: ["worldViewProjection", "iTime", "iResolution", "iMouse", "Radius", "Background", "NoiseSteps", "NoiseAmplitude", "NoiseFrequency", "Animation", "Color1", "Color2", "Color3", "Color4"]
@@ -440,8 +440,8 @@ function createTrailFire(scene, engine, sphere) {
 
 
     SHADERS['fireTrailShader'] = new BABYLON.ShaderMaterial("fireTrail", scene, {
-        vertex: "../shaders/vfx/trail",
-        fragment: "../shaders/vfx/trail",
+        vertex: "../../../shaders/vfx/trail",
+        fragment: "../../../shaders/vfx/trail",
     }, {
         attributes: ["position", "normal", "uv"],
         uniforms: ["world", "worldViewProjection", "view", "projection", "time"],
@@ -495,8 +495,8 @@ function createTrailFire(scene, engine, sphere) {
 
 function createTrail(scene, engine, objectToAttach, diameter, segments, offset, rotation, scale) {
     const fireTrailShader = new BABYLON.ShaderMaterial("fireTrail", scene, {
-        vertex: "../shaders/vfx/trail_sword",
-        fragment: "../shaders/vfx/trail_sword",
+        vertex: "../../../shaders/vfx/trail_sword",
+        fragment: "../../../shaders/vfx/trail_sword",
     }, {
         attributes: ["position", "normal", "uv"],
         uniforms: ["world", "worldViewProjection", "view", "projection", "time"],

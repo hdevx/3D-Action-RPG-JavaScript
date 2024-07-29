@@ -15,7 +15,6 @@ export default class Add extends Tool {
             let removeFunction = () => {
                 disposeAnimation(this.scene, floor);
                 gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = false;
-                console.log("removing all walls");
                 removeAllWalls(gridTrackerIndex.x, gridTrackerIndex.z);
                 updateCellAndSurronding(gridTrackerIndex, this.meshes);
             };

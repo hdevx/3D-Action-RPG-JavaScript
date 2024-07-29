@@ -1,14 +1,27 @@
+import { cellSize, gridSize } from "../../constants.js";
 import Tool from "../Tool.js";
+
 export default class Raise extends Tool {
+    constructor(name, scene, meshes, grid, tools, imageSrc, subTools) {
+        // Call the parent constructor
+        super(name, scene, meshes, grid, tools, imageSrc, subTools);
+
+        // Add collision-specific properties
+        this.terrain = GRID;
+        let options = { width: gridSize * cellSize, height: gridSize * cellSize, subdivisions: gridSize };
+        // this.terrainShape = this.createTerrainShape(options);
+        this.terrainBody = this.createTerrainBody();
+        this.lastPoint = null;
+    }
 
     click(xIndex, zIndex, gridTrackerIndex, gridTracker, pickedPoint) {
-        // console.log("raise");
-        // console.log(this);
-        this.modifyTerrain(pickedPoint, pickedPoint, 0);
+        this.modifyTerrain(pickedPoint, pickedPoint);
     }
 
 
-    modifyTerrain(lastPoint, currentPoint, tool) {
+
+
+    modifyTerrain(lastPoint, currentPoint) {
         let brushSize = 50;
         const positions = GRID.getVerticesData(BABYLON.VertexBuffer.PositionKind);
         const vertexCount = positions.length / 3;
@@ -28,12 +41,15 @@ export default class Raise extends Tool {
                         // console.log(`Lowering vertex at index ${i}, new y position: ${positions[i * 3 + 1]}`);
                         break;
                     case 2:
+                        // todo: get point at the start of the drag
+                        // positions[i * 3 + 1] = lastPoint.y;  // Flatten the terrain
                         positions[i * 3 + 1] = currentPoint.y;  // Flatten the terrain
                         // console.log(`Flattening vertex at index ${i}, new y position: ${positions[i * 3 + 1]}`);
                         break;
                 }
             }
         }
+
 
         // Ensure the mesh is marked as updated
         let normals = [];
@@ -42,8 +58,61 @@ export default class Raise extends Tool {
         GRID.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions, true);
         GRID.refreshBoundingInfo();
         GRID.markAsDirty();
-        GRID.convertToFlatShadedMesh()
+        GRID.convertToFlatShadedMesh();
+
+        // const body = new BABYLON.PhysicsBody(GRID, BABYLON.PhysicsMotionType.STATIC, false, this.scene);
+        // const updatedMeshShape = new BABYLON.PhysicsShapeMesh(GRID, this.scene);
+        // GRID.groundAggregate.shape = updatedMeshShape;
+        GRID.groundAggregate.dispose();
+        GRID.groundAggregate = new BABYLON.PhysicsAggregate(GRID, BABYLON.PhysicsShapeType.MESH, { mass: 0, restitution: 0.0, friction: 1000000000.8 }, this.scene);
     }
+
+
+
+    createTerrainShape(options) {
+        this.terrainHeightData = new Float32Array(options.subdivisions * options.subdivisions);
+
+        // Initialize height data
+        for (let i = 0; i < this.terrainHeightData.length; i++) {
+            this.terrainHeightData[i] = 0; // Set initial height to 0
+        }
+
+        return new BABYLON.HeightfieldShape({
+            heights: this.terrainHeightData,
+            rowCount: options.subdivisions,
+            columnCount: options.subdivisions,
+            scaling: new BABYLON.Vector3(options.width / options.subdivisions, 1, options.height / options.subdivisions)
+        });
+    }
+
+
+    createTerrainBody() {
+        const body = new BABYLON.PhysicsBody(GRID, BABYLON.PhysicsMotionType.STATIC, false, this.scene);
+        // body.shape = this.terrainShape;
+        return body;
+    }
+
+    // Function to update terrain collision when height is painted
+    updateTerrainCollision() {
+        // Get the updated vertex data from your terrain
+        const vertexData = BABYLON.VertexData.ExtractFromMesh(terrain);
+        const positions = vertexData.positions;
+
+        // Update the heightfield data
+        for (let i = 0; i < terrainSubdivisions; i++) {
+            for (let j = 0; j < terrainSubdivisions; j++) {
+                const index = (i * terrainSubdivisions + j) * 3 + 1; // Y component
+                terrainHeightData[i * terrainSubdivisions + j] = positions[index];
+            }
+        }
+
+        // Update the HeightfieldShape
+        terrainShape.updateHeights(terrainHeightData);
+
+        // Update the physics body
+        terrainBody.computeWorldMatrices();
+    }
+
 
     drag(positions, currentPoint) {
         throw "modifyTerrain method must be implemented in subclasses";

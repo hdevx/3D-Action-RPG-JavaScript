@@ -42,7 +42,7 @@ function createClutter(scene, meshes, floor, cellSize) {
         return null;// don't place any clutter this turn
     }
     // let object = meshes['clutter'][clutterToPlace].clone("clutter_clone");
-    let object = meshes['clutter'][clutterToPlace].clone("clutter_clone");
+    let object = meshes['clutter'][clutterToPlace].createInstance("clutter_clone");
 
     // clutter specific methods
     function getRandomPosition(cellSize, border) {
@@ -61,9 +61,14 @@ function createClutter(scene, meshes, floor, cellSize) {
 
     object.parent = floor;
 
-    object.position.x = object.position.x + newPosition.x;
-    object.position.y = object.position.y + newPosition.y;
-    object.position.z = object.position.z + newPosition.z;
+    object.position.x = 0;
+    object.position.y = 0;
+    object.position.z = 0;
+
+    // Nan when using instance, todo 
+    // object.position.x = object.position.x + newPosition.x;
+    // object.position.y = object.position.y + newPosition.y;
+    // object.position.z = object.position.z + newPosition.z;
 
     object.rotation = getRandomYRotation();
 
