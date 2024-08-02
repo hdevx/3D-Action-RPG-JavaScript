@@ -41,6 +41,8 @@ export function createGrid(scene, meshes) {
     const gridTracker = createGridTracker(scene, meshes);
     let tools = createTools(scene, meshes, gridTracker, grid);
 
+
+
     // Player starts on this cell, the mesh is already filled in. 
     // gridTracker[Math.floor(gridSize / 2)][Math.floor(gridSize / 2)] = true; // Fill a cell
 
@@ -49,59 +51,80 @@ export function createGrid(scene, meshes) {
     }
 
     // Grid Input Actions //
-    // grid.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, (evt) => {
-    //     if (ON_MOBILE) {
-    //         const { width, height } = scene.getEngine().getRenderingCanvas();
-    //         if (evt.pointerY >= height * 0.6) {
-    //             console.log("clicked bottom");
-    //             CANVASES[1].style.zIndex = 1;
-    //             return;
-    //         }
-    //     }
-    //     const pickedPoint = evt.additionalData.pickedPoint;
-    //     if (!pickedPoint) return;
+    grid.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, (evt) => {
+        if (ON_MOBILE) {
+            const { width, height } = scene.getEngine().getRenderingCanvas();
+            if (evt.pointerY >= height * 0.6) {
+                console.log("clicked bottom");
+                CANVASES[1].style.zIndex = 1;
+                return;
+            }
+        }
+        const pickedPoint = evt.additionalData.pickedPoint;
+        if (!pickedPoint) return;
 
-    //     const xIndex = Math.round(pickedPoint.x / cellSize);
-    //     const zIndex = Math.round(pickedPoint.z / cellSize);
-    //     let gridTrackerIndex = convert(xIndex, zIndex);
-    //     // console.log(`Clicked gridTrackerIndex: (${gridTrackerIndex.x}, ${gridTrackerIndex.z})`);
-    //     // console.log(`Clicked cell center: (${xIndex}, ${zIndex})`);
+        const xIndex = Math.round(pickedPoint.x / cellSize);
+        const zIndex = Math.round(pickedPoint.z / cellSize);
+        let gridTrackerIndex = convert(xIndex, zIndex);
+        // console.log(`Clicked gridTrackerIndex: (${gridTrackerIndex.x}, ${gridTrackerIndex.z})`);
+        // console.log(`Clicked cell center: (${xIndex}, ${zIndex})`);
 
-    //     // Create or remove the floor mesh based on click type
-    //     if (evt.sourceEvent.button === 0) { // Left click
-    //         // Do current Selected Tool
-    //         tools.selectedTool.click(xIndex, zIndex, gridTrackerIndex, gridTracker, pickedPoint);
+        // Create or remove the floor mesh based on click type
+        if (evt.sourceEvent.button === 0) { // Left click
 
-    //         // let floor = scene.getMeshByName(`floor_${xIndex}_${zIndex}`);
-    //         // if (!floor) {
-    //         //     let removeFunction = function () {
-    //         //         disposeAnimation(scene, floor);
-    //         //         gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = false;
-    //         //         removeAllWalls(gridTrackerIndex.x, gridTrackerIndex.z);
-    //         //         updateCellAndSurronding(gridTrackerIndex, meshes);
-    //         //     };
-    //         //     floor = createFloor(scene, xIndex, zIndex, cellSize, meshes, removeFunction);
-    //         //     // Position at the exact center of the cell
-    //         //     floor.position = new BABYLON.Vector3((xIndex + 0.5) * cellSize - cellSize / 2, 0.1, (zIndex + 0.5) * cellSize - cellSize / 2);
+            // Clicked Entire Building - Brings up Bubble Menu
+            // // Swap Building Type
+            // // Or Edit Position
+            // const gizmoManager = new BABYLON.GizmoManager(scene);
+            // gizmoManager.positionGizmoEnabled = true;
+            // gizmoManager.rotationGizmoEnabled = true;
+            // // gizmoManager.scaleGizmoEnabled = true;
+            // gizmoManager.boundingBoxGizmoEnabled = true;
+            // gizmoManager.usePointerToAttachGizmos = false;
+            // gizmoManager.attachToMesh(gridTracker.parentNode);
+            // // gizmoManager.attachableMeshes = [gridTracker.parentNode];
 
-    //         //     let completeFunction = function () {
-    //         //         gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = true;
-    //         //         updateCellAndSurronding(gridTrackerIndex, meshes);
-    //         //     }
-    //         //     floor.completeFunction = completeFunction;
-    //         //     entryAnimationFloor(scene, floor, meshes);
+            // Clicked Individual 
+
+            // Clicked Terrain
+            // Do current Selected Tool
+            // tools.selectedTool.click(xIndex, zIndex, gridTrackerIndex, gridTracker, pickedPoint);
+
+            // let floor = scene.getMeshByName(`floor_${xIndex}_${zIndex}`);
+            // if (!floor) {
+            //     let removeFunction = function () {
+            //         disposeAnimation(scene, floor);
+            //         gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = false;
+            //         removeAllWalls(gridTrackerIndex.x, gridTrackerIndex.z);
+            //         updateCellAndSurronding(gridTrackerIndex, meshes);
+            //     };
+            //     floor = createFloor(scene, xIndex, zIndex, cellSize, meshes, removeFunction);
+            //     // Position at the exact center of the cell
+            //     floor.position = new BABYLON.Vector3((xIndex + 0.5) * cellSize - cellSize / 2, 0.1, (zIndex + 0.5) * cellSize - cellSize / 2);
+
+            //     let completeFunction = function () {
+            //         gridTracker[gridTrackerIndex.x][gridTrackerIndex.z] = true;
+            //         updateCellAndSurronding(gridTrackerIndex, meshes);
+            //     }
+            //     floor.completeFunction = completeFunction;
+            //     entryAnimationFloor(scene, floor, meshes);
 
 
-    //         // }
-    //     }//  else if (evt.sourceEvent.button === 2) { // Right click
-    //     //     const floor = scene.getMeshByName(`floor_${x}_${z}`);
-    //     //     if (floor) {
-    //     //         // Scale down and remove
-    //     //         floor.scaling = new BABYLON.Vector3(0, 0, 0); // Animate this for a smoother effect
-    //     //         setTimeout(() => floor.dispose(), 300); // Delay to show scaling
-    //     //     }
-    //     // }
-    // }));
+            // }
+        }//  else if (evt.sourceEvent.button === 2) { // Right click
+        //     const floor = scene.getMeshByName(`floor_${x}_${z}`);
+        //     if (floor) {
+        //         // Scale down and remove
+        //         floor.scaling = new BABYLON.Vector3(0, 0, 0); // Animate this for a smoother effect
+        //         setTimeout(() => floor.dispose(), 300); // Delay to show scaling
+        //     }
+        // }
+    }));
+
+
+
+    var parentNode = new BABYLON.TransformNode("parentNode", scene);
+    gridTracker.parentNode = parentNode;
 
 
 
@@ -121,6 +144,9 @@ export function createGrid(scene, meshes) {
         }
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
             leftHeldDown = false;
+            if (pointerInfo.event.button == 0) {
+                if (tools.selectedTool.mouseUp) tools.selectedTool.mouseUp(gridTracker);
+            }
         }
 
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {

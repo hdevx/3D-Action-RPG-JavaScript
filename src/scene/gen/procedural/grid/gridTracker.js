@@ -59,6 +59,7 @@ function updateWallsForCell(x, z) {
             wall?.dispose();
             const cornerInfo = detectCorner(x, z, direction);
             wall = createWall2Story(x, z, direction, cellSize, key, cornerInfo);
+            wall.parent = gridTracker.parentNode;
             entryAnimationWall(scene, wall);
 
         } else {

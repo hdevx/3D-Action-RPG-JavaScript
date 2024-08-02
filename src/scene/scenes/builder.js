@@ -14,6 +14,8 @@ import { createBuilderSettings } from '../../utils/settings/builderSettings.js';
 import { setupMainPlayerMenu } from '../../character/interact/builderMenu.js';
 
 import { createMobileControls } from '../../utils/mobile/joystick.js';
+import { addGrass } from '../../utils/plants/plants.js';
+
 
 export async function createBuilder(engine) {
     const scene = new BABYLON.Scene(engine);
@@ -27,7 +29,7 @@ export async function createBuilder(engine) {
     camera.collisionRadius = new BABYLON.Vector3(12.5, 12.5, 12.5);
     // load all models, make sure parallel loading for speed
     const modelUrls = [
-        "env/builder/parts.glb"];
+        "env/builder/parts.glb", "env/exterior/grass/grass.glb"];
     const heroModelPromise = loadHeroModel(scene, character);
     const [heroModel, models] = await Promise.all([
         heroModelPromise,
@@ -59,9 +61,11 @@ export async function createBuilder(engine) {
     let meshes = addRoomMap(scene, models);
     hero.getChildMeshes().forEach((value) => { meshes.push(value); });
 
+    let vegatation = addGrass(scene, models);
+
     setupLighting(scene);
 
-    setupBuilder(scene, engine, meshes);
+    setupBuilder(scene, engine, meshes, camera);
 
     // // advanced lighting
     // // const spotLight = setupSpotlight(scene);
@@ -95,7 +99,7 @@ function addZReset(scene, dummyAggregate) {
     });
 }
 
-function setupBuilder(scene, engine, meshes) {
+function setupBuilder(scene, engine, meshes, camera) {
     // standard setup for different themes
     // console.log(meshes);
     const fm = name => meshes.find(mesh => mesh.name === name);
@@ -120,6 +124,7 @@ function setupBuilder(scene, engine, meshes) {
     assignedMeshes['clutter'][2].border = 10;
     setupProcedural(scene, engine, assignedMeshes);
 }
+
 
 function createSkydome(scene) {
     var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 8000.0 }, scene);

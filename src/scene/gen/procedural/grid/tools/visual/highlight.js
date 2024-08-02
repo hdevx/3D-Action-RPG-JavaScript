@@ -23,6 +23,7 @@ export function createHighlight(scenePassed) {
     highlightMesh.material.alpha = 0;
     highlightMesh.position.y = 0.01; // Slightly above the grid
     highlightMesh.isPickable = false;
+    highlightMesh.alwaysSelectAsActiveMesh = true;
     highlightMesh.visibility = 1; // Start invisible
 
     // Create animation for smooth transition

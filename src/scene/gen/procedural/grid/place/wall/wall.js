@@ -4,6 +4,7 @@ import { cellSize, gridSize } from "../../constants.js";
 export function createWallOnly(x, z, direction, size, key, meshes) {
     const wall = meshes['wall'][0].createInstance(`${key}_wall_${direction}`);
     wall.isPickable = false;
+    wall.alwaysSelectAsActiveMesh = true;
     wall.parent = null;
     // const wall = BABYLON.MeshBuilder.CreateBox(`${key}_wall_${direction}`, { width: size, height: 20, depth: 1 }, scene);
     // positions for using mesh builder
@@ -71,11 +72,14 @@ export function createWall2Story(x, z, direction, size, key, cornerInfo) {
         wall = meshes['wall'][0].createInstance(`${key}_wall_${direction}`);
     }
     wall.isPickable = false;
+    wall.alwaysSelectAsActiveMesh = true;
+
     wall.parent = null;
 
     //create base
     let base = meshes['base'][0].createInstance("base_clone");
     base.isPickable = false;
+    base.alwaysSelectAsActiveMesh = true;
     base.parent = wall;
     base.position = new BABYLON.Vector3(0, 0, 0);
     base.rotation = new BABYLON.Vector3(0, 0, 0);
@@ -84,6 +88,7 @@ export function createWall2Story(x, z, direction, size, key, cornerInfo) {
     // second story
     let secondStory = meshes['wall'][1].createInstance("base_clone");
     secondStory.isPickable = false;
+    secondStory.alwaysSelectAsActiveMesh = true;
     secondStory.parent = wall;
     secondStory.position = new BABYLON.Vector3(0, 0, 2);
     secondStory.rotation = new BABYLON.Vector3(0, 0, 0);
@@ -91,6 +96,8 @@ export function createWall2Story(x, z, direction, size, key, cornerInfo) {
 
     //roof
     let roof = createRoof(cornerInfo);
+    roof.isPickable = false;
+    roof.alwaysSelectAsActiveMesh = true;
     roof.parent = wall;
     roof.position = new BABYLON.Vector3(0, 0, 4);
     roof.rotation = new BABYLON.Vector3(0, 0, 0);

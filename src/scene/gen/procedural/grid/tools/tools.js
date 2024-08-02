@@ -31,7 +31,6 @@ export function createTools(scene, meshes, gridTracker, grid) {
 
     const settingsSubTools = [
         { name: 'Export' },
-        { name: 'Mobile Controls' },
         // { name: 'Door' }
     ];
 

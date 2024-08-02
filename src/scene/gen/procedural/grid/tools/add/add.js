@@ -19,6 +19,7 @@ export default class Add extends Tool {
                 updateCellAndSurronding(gridTrackerIndex, this.meshes);
             };
             floor = createFloor(this.scene, xIndex, zIndex, cellSize, this.meshes, removeFunction);
+            floor.parent = gridTracker.parentNode;
             // Position at the exact center of the cell
             floor.position = new BABYLON.Vector3((xIndex + 0.5) * cellSize - cellSize / 2, 0.1, (zIndex + 0.5) * cellSize - cellSize / 2);
 
@@ -33,6 +34,10 @@ export default class Add extends Tool {
         }
 
     }
+
+    // mouseUp() {
+    //     // remove grass where grid tracker is true
+    // }
 
     drag(positions, currentPoint) {
         throw "modifyTerrain method must be implemented in subclasses";
