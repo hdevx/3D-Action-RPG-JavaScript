@@ -15,7 +15,15 @@ let SHADERS = {};
 
 let GRID = {};
 
+
 let MESH_LIBRARY = {};
+// Contains:
+//   'Plants'
+//     'Grass'
+//     'Tree'
+//   'BuildingType'
+//     'Wall'
+//     'Roof'
 
 let targetBaseOnCameraView = true; // if false target based on character rotation
 // use touch joystick for mobile options

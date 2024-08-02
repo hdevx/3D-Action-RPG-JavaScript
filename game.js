@@ -3,7 +3,7 @@ import SceneManager from './src/scene/SceneManager.js';
 import { setSceneManager } from './src/character/damagePopup.js';
 
 window.addEventListener('DOMContentLoaded', async function () {
-    console.log("DOM Loaded");
+    // console.log("DOM Loaded");
 
     // const canvas = document.getElementById('renderCanvas');
     // let engine = new BABYLON.WebGPUEngine(canvas);

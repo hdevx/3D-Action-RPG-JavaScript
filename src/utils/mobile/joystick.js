@@ -42,15 +42,15 @@ export function createMobileControls(scene, camera, player) {
             inputMap["e"] = false;
 
             // Dispatch a click event on the first canvas at the same position
-            // const clickEvent = new MouseEvent('click', {
-            //     clientX: CANVASES[0].getBoundingClientRect().left + x,
-            //     clientY: CANVASES[0].getBoundingClientRect().top + y,
-            //     bubbles: true,
-            //     cancelable: true,
-            //     view: window
-            // });
+            const clickEvent = new MouseEvent('click', {
+                clientX: CANVASES[0].getBoundingClientRect().left + x,
+                clientY: CANVASES[0].getBoundingClientRect().top + y,
+                bubbles: true,
+                cancelable: true,
+                view: window
+            });
 
-            // CANVASES[0].dispatchEvent(clickEvent);
+            CANVASES[0].dispatchEvent(clickEvent);
         }
     });
 
@@ -126,10 +126,12 @@ export function createMobileControls(scene, camera, player) {
         }
 
         if (cameraJoystick.pressed) {
-            const rotateY = cameraJoystick.deltaPosition.x * 0.011;
-            const rotateX = cameraJoystick.deltaPosition.y * 0.011;
-            camera.alpha += rotateY;
-            camera.beta += rotateX;
+            const rotateX = cameraJoystick.deltaPosition.x * 0.02;
+            const rotateY = cameraJoystick.deltaPosition.y * 0.041;
+            camera.alpha += rotateX;
+            if (camera.beta - rotateY >= (Math.PI / 2) * 0.01) {
+                camera.beta -= rotateY;
+            }
         }
     });
 }

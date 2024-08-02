@@ -1,7 +1,11 @@
 export async function loadingAnim(scene, urls) {
 
     const mesh = scene.getMeshByName("Dungeon_primitive0");
-    console.log(mesh);
+    // console.log(mesh);
+    if (!mesh) {
+        return;
+    }
+
 
     if (mesh.instances && mesh.instances.length > 0) {
         console.log("Regular instances:", mesh.instances.length);
