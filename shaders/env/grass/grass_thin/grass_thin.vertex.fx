@@ -41,6 +41,13 @@ uniform float amplitude;
 
     vec3 displacedPosition = position + vec3(0.0, wave, 0.0);
     
+
+
+
+
+
+
+
     
     vUV = uv;
 
@@ -52,5 +59,7 @@ uniform float amplitude;
 
 // worldPosition
      gl_Position = viewProjection * finalWorld * vec4(displacedPosition, 1.0);
+
+ 
   }
 

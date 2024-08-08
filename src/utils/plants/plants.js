@@ -1,3 +1,4 @@
+import { cellSize, gridSize } from "../../scene/gen/procedural/grid/constants.js";
 
 function loadShaders() {
 
@@ -11,7 +12,7 @@ let grassInfo = {};
 export function reloadGrass() {
 
     const fm = name => grassMeshes.find(mesh => mesh.name === name);
-    let grassInstance = fm('Grass_2_Geo').clone("grassInstance");
+    let grassInstance = fm('Grass_2').clone("grassInstance");
     // createInstance("test");
     grassInstance.parent = null;
     grassInstance.position.x = 40;
@@ -21,15 +22,201 @@ export function reloadGrass() {
     // grassInstance.material = grassThinShader;
     grassInstance.INSTANCEDMESH_SORT_TRANSPARENT = true;
     // scatterThin(grassInstance, -100, 100, -100, 100, 3);
-    scatterThin(grassInstance, -100, 100, -100, 100, 1000);
+
+
+    grassInfo.thinInstances = [];
+    scatterThin(grassInstance, -100, 100, -100, 100, 2000); //2000);
+    let flowersInstance = fm('Grass_3').clone('flowersInstance');
+    flowersInstance.parent = null;
+    flowersInstance.position.x = 40;
+    flowersInstance.position.y = 5;
+    flowersInstance.position.z = 5;
+    flowersInstance.scaling.y = 5;
+    // flowersInstance.INSTANCEDMESH_SORT_TRANSPARENT = true;
+    scatterThin(flowersInstance, -100, 100, -100, 100, 400);
+
+    let groveInstance = fm('Grass_1').clone('groveInstance');
+    groveInstance.parent = null;
+    groveInstance.position.x = 40;
+    groveInstance.position.y = 5;
+    groveInstance.position.z = 5;
+    groveInstance.scaling.y = 5;
+    // flowersInstance.INSTANCEDMESH_SORT_TRANSPARENT = true;
+    scatterThin(groveInstance, -100, 100, -100, 100, 300);
+
+    let bushInstance = fm('Bush_1').clone('bushInstance');
+    bushInstance.parent = null;
+    bushInstance.position.x = 40;
+    bushInstance.position.y = 5;
+    bushInstance.position.z = 5;
+    bushInstance.rotation.x = 12.0;
+    bushInstance.scaling.y = 5;
+    scatterThin(bushInstance, -100, 100, -100, 100, 40, true);
+
+    // let woodInstance = fm('Trunk').clone('TrunkInstance');
+    // woodInstance.parent = null;
+    // woodInstance.position.x = 40;
+    // woodInstance.position.y = 5;
+    // woodInstance.position.z = 5;
+    // woodInstance.rotation.x = 12.0;
+    // woodInstance.scaling.y = 5;
+    // let woodLeafInstance = fm('Bush_Leaf_1').clone('woodLeafInstance');
+    // woodLeafInstance.parent = null;
+    // woodLeafInstance.position.x = 40;
+    // woodLeafInstance.position.y = 5;
+    // woodLeafInstance.position.z = 5;
+    // woodLeafInstance.rotation.x = 12.0;
+    // woodLeafInstance.scaling.y = 5;
+    // scatterThin(woodInstance, -100, 100, -100, 100, 10, true, 1.0, woodLeafInstance);
+
+
+    let woodInstance2 = fm('Trunk').clone('TrunkInstance2');
+    woodInstance2.parent = null;
+    woodInstance2.position.x = 40;
+    woodInstance2.position.y = 5;
+    woodInstance2.position.z = 5;
+    woodInstance2.rotation.x = 12.0;
+    woodInstance2.scaling.y = 5;
+    let woodLeafInstance2 = fm('Bush_Leaf_2_Evergreen').clone('woodLeafInstance');
+    woodLeafInstance2.parent = null;
+    woodLeafInstance2.position.x = 40;
+    woodLeafInstance2.position.y = 5;
+    woodLeafInstance2.position.z = 5;
+    woodLeafInstance2.rotation.x = 12.0;
+    woodLeafInstance2.scaling.y = 5;
+    scatterThin(woodInstance2, -100, 100, -100, 100, 4, true, 2.0, woodLeafInstance2);
 }
+
+
+function getHeightAtPoint(x, z, sceneOptional) {
+    // Get the terrain vertex data
+    const vertexData = GRID.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+
+    // Get terrain properties
+    const subdivisions = GRID.subdivisions;
+    const width = gridSize * cellSize;
+    const height = gridSize * cellSize;
+
+    // Calculate the step size
+    let stepX = width / subdivisions;
+    let stepZ = height / subdivisions;
+    stepX = gridSize;
+    stepZ = gridSize;
+
+    // Adjust x and z to be relative to the terrain's origin
+    const relativeX = 19;
+    const relativeZ = 19;
+
+
+    // Use Math.floor for correct negative number handling
+    let col = Math.floor(relativeX / stepX);
+    let row = Math.floor(relativeZ / stepZ);
+    // col += 9;
+    // row += 9;
+    // Find the grid square that contains the point
+
+    // Clamp col and row to valid range
+
+    let debug = true;
+    if (debug) {
+        const maxHeight = 4000;
+
+        const rayStart = new BABYLON.Vector3(x * cellSize - (gridSize * cellSize / 2), maxHeight, z * cellSize - (gridSize * cellSize / 2));
+        const rayEnd = new BABYLON.Vector3(x * cellSize - (gridSize * cellSize / 2), -maxHeight, z * cellSize - (gridSize * cellSize / 2));
+
+        const ray = new BABYLON.Ray(rayStart, rayEnd.subtract(rayStart).normalize(), maxHeight * 2);
+        let rayHelper = new BABYLON.RayHelper(ray);
+
+        // Define the ray's visual characteristics
+        let rayColor = new BABYLON.Color3(1, 0, 0); // Default to red if no color is specified
+        rayHelper.show(sceneOptional, rayColor);
+    }
+
+    console.log("x " + x);
+    // console.log("col " + col);
+
+    console.log("z " + z);
+    // console.log("row " + row);
+
+
+    // Clamp to terrain bounds
+    const clampedCol = Math.max(0, Math.min(col, subdivisions));
+    const clampedRow = Math.max(0, Math.min(row, subdivisions));
+
+    // Calculate vertex indices
+    const i1 = 3 * ((6) * (((19 - 1 - z) * (gridSize)) + x));
+    const i2 = i1 + 3;
+    const i3 = i2 + 3;
+    const i4 = i3 + 3;
+
+    // Get vertex positions
+    const x1 = vertexData[i1], y1 = vertexData[i1 + 1], z1 = vertexData[i1 + 2];
+    const x2 = vertexData[i2], y2 = vertexData[i2 + 1], z2 = vertexData[i2 + 2];
+    const x3 = vertexData[i3], y3 = vertexData[i3 + 1], z3 = vertexData[i3 + 2];
+    const x4 = vertexData[i4], y4 = vertexData[i4 + 1], z4 = vertexData[i4 + 2];
+
+    if (debug) {
+        const maxHeight = 4000;
+
+        const rayStart = new BABYLON.Vector3(vertexData[i1], maxHeight, z1);
+        const rayEnd = new BABYLON.Vector3(vertexData[i1], -maxHeight, z1);
+
+        const ray = new BABYLON.Ray(rayStart, rayEnd.subtract(rayStart).normalize(), maxHeight * 2);
+        let rayHelper = new BABYLON.RayHelper(ray);
+
+        // Define the ray's visual characteristics
+        let rayColor = new BABYLON.Color3(1, 1, 0); // Default to red if no color is specified
+        rayHelper.show(sceneOptional, rayColor);
+
+
+        const rayStart2 = new BABYLON.Vector3(x2, maxHeight, z2);
+        const rayEnd2 = new BABYLON.Vector3(x2, -maxHeight, z2);
+
+        const ray2 = new BABYLON.Ray(rayStart2, rayEnd2.subtract(rayStart2).normalize(), maxHeight * 2);
+        let rayHelper2 = new BABYLON.RayHelper(ray2);
+
+        // Define the ray's visual characteristics
+        let rayColor2 = new BABYLON.Color3(0, 1, 0); // Default to red if no color is specified
+        rayHelper2.show(sceneOptional, rayColor2);
+
+        const rayStart3 = new BABYLON.Vector3(x3, maxHeight, z3);
+        const rayEnd3 = new BABYLON.Vector3(x3, -maxHeight, z3);
+
+        const ray3 = new BABYLON.Ray(rayStart3, rayEnd3.subtract(rayStart3).normalize(), maxHeight * 2);
+        let rayHelper3 = new BABYLON.RayHelper(ray3);
+
+        // Define the ray's visual characteristics
+        let rayColor3 = new BABYLON.Color3(0, 1, 0); // Default to red if no color is specified
+        rayHelper3.show(sceneOptional, rayColor3);
+
+        const rayStart4 = new BABYLON.Vector3(x4, maxHeight, z4);
+        const rayEnd4 = new BABYLON.Vector3(x4, -maxHeight, z4);
+
+        const ray4 = new BABYLON.Ray(rayStart4, rayEnd4.subtract(rayStart4).normalize(), maxHeight * 2);
+        let rayHelper4 = new BABYLON.RayHelper(ray4);
+
+        // Define the ray's visual characteristics
+        let rayColor4 = new BABYLON.Color3(0, 1, 0); // Default to red if no color is specified
+        rayHelper4.show(sceneOptional, rayColor4);
+    }
+    const detT = (z3 - z1) * (x2 - x1) - (x3 - x1) * (z2 - z1);
+    const l1 = ((z3 - z1) * (x - x1) + (x1 - x3) * (z - z1)) / detT;
+    const l2 = ((z1 - z2) * (x - x1) + (x2 - x1) * (z - z1)) / detT;
+    const l3 = 1 - l1 - l2;
+
+    // Interpolate the Y value
+    return (l1 * y1 + l2 * y2 + l3 * y3) / 5;
+
+}
+
 function getRandomInRange(min, max) {
     return Math.random() * (max - min) + min;
 }
 
 function getHeightOnGridAtPoint(x, z) {
-    x = (x + 8) * 5;
-    z = (z + 1) * 5;
+    let gridSpace = convertToGridSpace(x, z);
+    x = gridSpace.x;
+    z = gridSpace.z;
     // Create a ray starting from above the grid, pointing downwards
     const origin = new BABYLON.Vector3(x, 1000, z); // Start high above the grid
     const direction = new BABYLON.Vector3(0, -1, 0);
@@ -51,6 +238,11 @@ function getHeightOnGridAtPoint(x, z) {
     }
 }
 
+function convertToGridSpace(x, z) {
+    x = (x + 8) * 5;
+    z = (z + 1) * 5;
+    return { x: x, z: z }
+}
 
 function getCoordinatesFromMatrix(matrix, i) {
     return {
@@ -63,27 +255,55 @@ function getCoordinatesFromMatrix(matrix, i) {
 
 export function updateGrassThin() {
 
+
     // let matrices = grassInfo.grass.matrices;
     // console.log(grassInfo.grass.bufferMatrices);
 
     // let newMatricies = grassInfo.grass.bufferMatrices;
-    const maxIterations = grassInfo.grass.bufferMatrices.length / 16;
+    if (grassInfo.thinInstances.length === 0) { return; }
+    for (let g = 0; g < grassInfo.thinInstances.length; g++) {
 
 
-    for (let i = 0; i < maxIterations; i++) {
-        // Perform your operations here
-        let cords = getCoordinatesFromMatrix(grassInfo.grass.bufferMatrices, i);
-        // console.log(array[i]);
-        // console.log(cords.y);
-        let newY = getHeightOnGridAtPoint(cords.x, cords.z);
-        grassInfo.grass.bufferMatrices[i * 16 + 13] = newY;
+        const maxIterations = grassInfo.thinInstances[g].bufferMatrices.length / 16;
+        // console.log(grassInfo.thinInstances);
+
+        for (let i = 0; i < maxIterations; i++) {
+
+            // only do within dirty cells;
+
+            let cords = getCoordinatesFromMatrix(grassInfo.thinInstances[g].bufferMatrices, i);
+            // console.log(array[i]);
+            // console.log(cords.y);
+
+            // find the cell the grass is on
+            let gridCords = convertToGridSpace(cords.x, cords.z);
+            let gridTrackerIndex = GRID.convert(gridCords.x, gridCords.z);
+            // console.log(GRID.gridTracker[gridTrackerIndex.x][gridTrackerIndex.z]);
+            // if the cell is filled, set height -1000
+            if (GRID.gridTracker[gridTrackerIndex.x][gridTrackerIndex.z]) {
+                grassInfo.thinInstances[g].bufferMatrices[i * 16 + 13] = -1000;
+            } else { // else set it to the terrain 
+                let newY = getHeightOnGridAtPoint(cords.x, cords.z);
+                // let newY = getHeightAtPoint(gridTrackerIndex.x, gridTrackerIndex.z, grassInfo.scene);
+                // console.log("newY" + newY);
+                // newY = 5;
+                // newY = newY + 1;
+                // calculate height and slope. if the slope is too high, don't spawn grass, spawn rock 
+                // 
+                grassInfo.thinInstances[g].bufferMatrices[i * 16 + 13] = newY;
+            }
+
+
+
+        }
+
+        grassInfo.thinInstances[g].parent.thinInstanceSetBuffer("matrix", grassInfo.thinInstances[g].bufferMatrices, 16, true); // matrix buffer is updateable, static is false
+
     }
-
-    grassInfo.grass.parent.thinInstanceSetBuffer("matrix", grassInfo.grass.bufferMatrices, 16, true); // matrix buffer is updateable, static is false
 
 }
 
-function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount) {
+function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount, rotate, variance, additional) {
 
     // grassThinShader.transparencyMode = BABYLON.Material.MATERIAL_ALPHATESTANDBLEND
     // grassThinShader.needDepthPrePass = true;
@@ -94,6 +314,7 @@ function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount) {
     // scene.useOrderIndependentTransparency = true;
     // grassThinShader.needAlphaBlending = function () { return true; };
     let thinGrass = grass_1.clone("thinGrass2");
+
     thinGrass.rotation = BABYLON.Quaternion.Identity();
 
     let numInstances = instanceCount;
@@ -101,26 +322,46 @@ function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount) {
 
     // Create matrices for instances
     let scale = grass_1.scaling;
-    scale.x = 1.2;
-    scale.y = 1.2;
-    scale.z = 1.2;
+
+    scale.x = 1.0;
+    scale.y = 1.0;
+    scale.z = 1.0;
+
 
     let matrices = [];
     var bufferMatrices = new Float32Array(16 * numInstances);
     for (let i = 0; i < numInstances; i++) {
+
         const matrix = BABYLON.Matrix.Identity();
 
         // Random position on the plane
         let x = getRandomInRange(minX, maxX);
         let z = getRandomInRange(minZ, maxZ);
 
+        let yScale = Math.random() * (variance - 1.0) + 1.0;
+        if (variance != null) {
+            scale.x = yScale;
+            scale.z = yScale;
+            scale.y = yScale;
+        }
+
+
         // Random rotation around Y axis
-        // const noRotation = BABYLON.Quaternion.Identity();
-        const fixedRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, -Math.PI / 2); // 90 degrees
-        const randomRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Z, Math.random() * Math.PI * 2);
-        const combinedRotation = fixedRotation.multiply(randomRotation);
+        const noRotation = BABYLON.Quaternion.Identity();
+        let rotation = 0;
+        if (!rotate) {
+            rotation = -Math.PI / 2;
+        }
+        let fixedRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, rotation); // 90 degrees
 
+        let randomRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Z, Math.random() * Math.PI * 2);
+        let combinedRotation = fixedRotation.multiply(randomRotation);
+        if (rotate) {
+            let randomRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y, Math.random() * Math.PI * 2);
+            combinedRotation = noRotation.multiply(randomRotation);
+        }
 
+        // let height = getHeightAtPoint(x, z);
         let height = getHeightOnGridAtPoint(x, z);
         // height /= 5;
         // console.log(height);
@@ -146,7 +387,17 @@ function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount) {
 
     // var idx = thinGrass.thinInstanceAdd(matrices);
     thinGrass.thinInstanceSetBuffer("matrix", bufferMatrices, 16);
+    if (additional) {
+        let addtionalMesh = additional.clone("additional");
+        addtionalMesh.rotation = BABYLON.Quaternion.Identity();
+        addtionalMesh.position.y += 70;
+        addtionalMesh.thinInstanceSetBuffer("matrix", bufferMatrices, 16);
 
+        grassInfo.thinInstances.push({ 'parent': thinGrass, 'bufferMatrices': bufferMatrices });
+        grassInfo.grass = { 'parent': thinGrass, 'bufferMatrices': bufferMatrices };
+    }
+
+    grassInfo.thinInstances.push({ 'parent': thinGrass, 'bufferMatrices': bufferMatrices });
     grassInfo.grass = { 'parent': thinGrass, 'bufferMatrices': bufferMatrices };
     return thinGrass;
 
@@ -192,6 +443,11 @@ export function addGrass(scene, models) {
     scene.onBeforeRenderObservable.add(() => {
         const time = performance.now() * 0.001; // Current time in seconds
         grassShader.setFloat("time", time);
+
+        var playerPosition = DUMMY.body.transformNode._absolutePosition;
+        // DUMMY.body.transformNode._absolutePosition
+        var playerPosition = new BABYLON.Vector3(DUMMY.body.transformNode._absolutePosition.x, DUMMY.body.transformNode._absolutePosition.y, DUMMY.body.transformNode._absolutePosition.z);
+        grassShader.setVector3("playerPosition", playerPosition);
     });
 
 
@@ -205,19 +461,46 @@ export function addGrass(scene, models) {
         {
             attributes: ["position", "normal", "uv", "color", "world0", "world1", "world2", "world3"],
             uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "time", "viewProjection", "vFogInfos", "vFogColor"],
-            needAlphaBlending: true
+            needAlphaBlending: true,
+            needAlphaTesting: true
         });
+
+
+    const shaderMaterial = new BABYLON.ShaderMaterial(
+        'shader',
+        scene,
+        {
+            vertex: "../../../shaders/env/grass/grass_thin/grass_alphatest",
+            fragment: "../../../shaders/env/grass/grass_thin/grass_alphatest",
+        },
+        {
+            attributes: ['position', 'normal', 'uv'],
+            uniforms: ['world', 'worldView', 'worldViewProjection', 'view', 'projection'],
+            needAlphaBlending: true,
+            needAlphaTesting: true
+        }
+    );
+
+    const mainTexture = new BABYLON.Texture(
+        'https://dl.dropbox.com/s/uuoym37nsr17pv2/grass2.png',
+        scene
+    );
+
+    // shaderMaterial.setTexture('textureSampler', mainTexture);
+    shaderMaterial.setTexture('textureSampler', grassTexture);
+    // shaderMaterial.alpha = BABYLON.Material.MATERIAL_ALPHATEST;
+    shaderMaterial.backFaceCulling = false;
 
 
     var grassThinTexture = new BABYLON.Texture("./assets/env/exterior/grass/grass_transparent_shadow.png", scene);
     grassThinShader.setTexture("textureSampler", grassThinTexture);
     // grassThinShader.backFaceCulling = false;
-    grassThinShader.imageProcessingConfiguration = new BABYLON.ImageProcessingConfiguration();
-    grassThinShader.imageProcessingConfiguration.exposure = 0.0; // Set to default exposure
-    grassThinShader.imageProcessingConfiguration.contrast = 0.0; // Set to default contrast
-    grassThinShader.imageProcessingConfiguration.vignetteWeight = 0; // Disable vignette
-    grassThinShader.imageProcessingConfiguration.colorGradingTexture = null; // Remove color grading
-    grassThinShader.imageProcessingConfiguration.toneMappingEnabled = false; // Disable tone mapping
+    // grassThinShader.imageProcessingConfiguration = new BABYLON.ImageProcessingConfiguration();
+    // grassThinShader.imageProcessingConfiguration.exposure = 0.0; // Set to default exposure
+    // grassThinShader.imageProcessingConfiguration.contrast = 0.0; // Set to default contrast
+    // grassThinShader.imageProcessingConfiguration.vignetteWeight = 0; // Disable vignette
+    // grassThinShader.imageProcessingConfiguration.colorGradingTexture = null; // Remove color grading
+    // grassThinShader.imageProcessingConfiguration.toneMappingEnabled = false; // Disable tone mapping
     // grassThinShader.disableDepthWrite = true;
     grassThinShader.setArray4("world0", [1, 0, 0, 0]);
     grassThinShader.setArray4("world1", [0, 1, 0, 0]);
@@ -225,14 +508,15 @@ export function addGrass(scene, models) {
     grassThinShader.setArray4("world3", [0, 0, 0, 1]);
     grassThinShader.backFaceCulling = false;
     grassThinShader.needDepthPrePass = true;
-    grassThinShader.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
-    grassThinShader.transparencyMode = BABYLON.Material.MATERIAL_ALPHATESTANDBLEND;
+    // grassThinShader.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
+    // grassThinShader.transparencyMode = BABYLON.Material.MATERIAL_ALPHATESTANDBLEND;
+    // grassThinShader.transparencyMode = BABYLON.Material.MATERIAL_ALPHATEST;
 
     grassThinShader.onBind = function (mesh) {
-        const effect = grassThinShader.getEffect();
-        effect.setMatrix("view", scene.getViewMatrix());
-        effect.setFloat4("vFogInfos", scene.fogMode, scene.fogStart, scene.fogEnd, scene.fogDensity);
-        effect.setColor3("vFogColor", scene.fogColor);
+        // const effect = grassThinShader.getEffect();
+        // effect.setMatrix("view", scene.getViewMatrix());
+        // effect.setFloat4("vFogInfos", scene.fogMode, scene.fogStart, scene.fogEnd, scene.fogDensity);
+        // effect.setColor3("vFogColor", scene.fogColor);
     };
 
     scene.onBeforeRenderObservable.add(() => {
@@ -241,8 +525,22 @@ export function addGrass(scene, models) {
     });
 
 
+    // const pbr = new BABYLON.PBRMetallicRoughnessMaterial("pbr", scene);
+    const pbr = new BABYLON.StandardMaterial("myMaterial", scene);
+    pbr.diffuseTexture = grassThinTexture;
+    pbr.transparencyMode = BABYLON.Material.MATERIAL_ALPHATEST;
+    pbr.diffuseTexture.hasAlpha = true;
+    pbr.useAlphaFromDiffuseTexture = true;
+    pbr.backFaceCulling = false;
 
 
+
+    // var custom = new BABYLON.CustomMaterial("wobbleMaterial", scene);
+
+    // custom.AddUniform('test1', 'vec3');
+
+    // custom.Vertex_Before_PositionUpdated('float wave = 0.0; wave = sin(position.x * 1.0 + time) * 0.5; vec3 displacedPosition = position + vec3(0.0, wave, 0.0)\
+    //   ');
 
     const leafShader = new BABYLON.ShaderMaterial(
         "leaves",
@@ -290,8 +588,12 @@ export function addGrass(scene, models) {
         meshes.push(mesh);
         mesh.scaling = new BABYLON.Vector3(5, 5, 5);
         // mesh.position.y = 5;
-        if (mesh.name.toLowerCase().includes("grass") || mesh.name.toLowerCase().includes("leaves")) {
-            mesh.material = grassShader;
+        if (mesh.name.toLowerCase().includes("grass") || mesh.name.toLowerCase().includes("leaves") || mesh.name.toLowerCase().includes("bush")) {
+            // mesh.material = grassShader;
+            mesh.material = grassThinShader;
+            // mesh.material = pbr;
+            // mesh.material = shaderMaterial;
+
         }
         if (mesh.name.toLowerCase().includes("trunk")) {
             mesh.material = treeShader;
@@ -301,7 +603,7 @@ export function addGrass(scene, models) {
             mesh.material.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
         }
         if (mesh.name.toLowerCase().includes("leaves")) {
-            mesh.material = grassShader;
+            // mesh.material = grassShader;
             // mesh.material.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
             // mesh.material = leafShader;
             // mesh.scaling.x = 0.01;
@@ -331,7 +633,8 @@ export function addGrass(scene, models) {
             let randomZ = getRandomInRange(minZ, maxZ);
             let randomYRotation = getRandomInRange(0, 2 * 3.14);
 
-            var newInstance = grassType.createInstance("grass" + i);
+            // var newInstance = grassType.createInstance("grass" + i);
+            var newInstance = grassType.clone("grass" + i);
 
             newInstance.position.x = randomX;
             newInstance.position.y = 5;
@@ -431,7 +734,7 @@ export function addGrass(scene, models) {
     grassFull.position.z = 5;
     grassFull.scaling.y = -5;
     grassFull.material = grassShader;
-    // grassFull.INSTANCEDMESH_SORT_TRANSPARENT = true;
+    grassFull.INSTANCEDMESH_SORT_TRANSPARENT = true;
     // scatter(grassFull, -300, 300, 100, 300, 100);
 
 

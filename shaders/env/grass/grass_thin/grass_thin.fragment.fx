@@ -42,7 +42,8 @@
 // gl_FragColor = texture2D(textureSampler, vUV);
 
     vec2 flippedUV = vec2(vUV.x, 1.0 - vUV.y);
-    gl_FragColor = texture2D(textureSampler, flippedUV);
+    vec4 textureColor = texture2D(textureSampler, flippedUV);
+    gl_FragColor = textureColor;
 
     vec4 defaultColor = vec4(1.0, 0.0, 0.0, 1.0);
     float fog = CalcFogFactor();
@@ -50,6 +51,11 @@
     // vFogColor4 = vFogColor4 * 1.0;
      gl_FragColor = fog * gl_FragColor + (1.0 - fog) * vFogColor4;    
     // gl_FragColor = (fog * 2.) * defaultColor;    
+
+       // Alpha testing
+        if (gl_FragColor.a < 0.5) {
+            discard;
+        }
      
     
     gl_FragColor.r = gl_FragColor.r * 0.4;
@@ -57,6 +63,7 @@
     gl_FragColor.b = gl_FragColor.b * 0.4;
     gl_FragColor.a = gl_FragColor.a;
 
+//   gl_FragColor = vec4(textureColor.rgb, textureColor.a);
     
   }
 

@@ -12,11 +12,9 @@ uniform float amplitude;
   varying vec2 vUV;
   varying vec4 vColor; // Varying to pass color to the fragment shader
 
-// // Instancing attributes
-// attribute vec4 world0;
-// attribute vec4 world1;
-// attribute vec4 world2;
-// attribute vec4 world3;
+// brush by player effect
+uniform vec3 playerPosition;
+
 
 // uncomment for instanced
 //  #include<instancesDeclaration>
@@ -47,5 +45,27 @@ uniform float amplitude;
 //  #include<instancesVertex>
     // gl_Position = worldViewProjection * finalWorld * vec4(displacedPosition, 1.0);
     
+
+
+       //  brush by player effect
+//  vec3 pos = position;
+//     // Calculate distance from player
+//     float dist = distance(playerPosition.xz, pos.xz);
+//    // Define the radius of effect
+//     float radius = 2.0;
+    
+//     // Calculate the bow down effect
+//     float bowDown = max(0.0, 1.0 - dist / radius);
+    
+//     // Apply sine wave for gentle movement
+//     // float wave2 = sin(time * 2.0 + pos.x * 0.5) * 0.05;
+    
+//     // Combine effects
+//     pos.y -= bowDown *0.7 ;
+//     // pos.x -= playerPosition.x * 10.01 ;
+//   gl_Position = worldViewProjection * vec4(pos, 1.0);
+
+
+
 
   }
