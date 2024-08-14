@@ -14,6 +14,7 @@
       height: 100%;
       margin: 0;
       padding: 0;
+      background: black;
     }
 
     #renderCanvas {
@@ -164,28 +165,55 @@
         0 0 8px rgb(245, 202, 86),
         inset 0 0 8px rgb(245, 202, 86);
     }
+
+    #renderCanvas {
+      width: 100%;
+      height: 100%;
+      filter: blur(10px);
+      opacity: 0;
+      transition: all 2s ease-out;
+    }
+
+
+    #renderCanvas.visible {
+      opacity: 1;
+      filter: blur(0px);
+    }
   </style>
+
+  <script>
+    // Record the time when the page starts loading
+    const startTime = performance.now();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const endTime = performance.now();
+      const domLoadTime = endTime - startTime;
+      console.log(`DOM loaded in ${domLoadTime.toFixed(2)} milliseconds`);
+    });
+  </script>
 
   <script src="./lib/babylon.js"></script>
 
   <script src="./lib/babylon.gui.min.js"></script>
 
   <script src="./lib/babylonjs.loaders.min.js"></script>
-  <script src="./lib/pep.js"></script>
 
-  <script src="./lib/babylon.terrainMaterial.js"> </script>
 
   <script src="./lib/HavokPhysics_umd.js"></script>
 
   <!-- Optional, Disable for reload performance -->
+  <script src="./lib/pep.js"></script>
+
+  <script src="./lib/babylon.terrainMaterial.js"> </script>
 
   <script src="./lib/babylon.inspector.bundle.js"></script>
   <!-- <script src="./lib/THREE.Terrain.min.js"></script> -->
   <!-- mesh gen -->
-  <script src="https://cdn.jsdelivr.net/npm/earcut@2.2.2/dist/earcut.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/earcut@2.2.2/dist/earcut.min.js"></script> -->
 
   <!-- Optional, Disable for reload performance -->
-
+  <!-- Exporter -->
+  <!-- <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script> -->
 
 
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GBBGRRLHZC"></script>
@@ -202,7 +230,7 @@
 
 <body>
   <!-- touch-action="none" for best results from PEP -->
-  <canvas id="renderCanvas" touch-action="none"></canvas>
+  <canvas id="renderCanvas" class="blurry" touch-action="none"></canvas>
   <div id="toolBar">
 
   </div>
