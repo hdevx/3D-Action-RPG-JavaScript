@@ -1,4 +1,4 @@
-import { cellSize, gridSize } from "../../constants.js";
+import { cellSize, gridConfig, gridSize } from "../../constants.js";
 import Tool from "../Tool.js";
 
 import { reloadGrass, updateGrassThin } from "../../../../../../utils/plants/plants.js";
@@ -17,20 +17,26 @@ export default class Raise extends Tool {
         this.targetY = null;
         this.currentX = null;
         this.currentZ = null;
+
     }
 
     click(xIndex, zIndex, gridTrackerIndex, gridTracker, pickedPoint) {
-        this.modifyTerrain(pickedPoint, pickedPoint);
+        this.modifyTerrain(pickedPoint, pickedPoint, gridTrackerIndex, gridTracker);
+
+        if (this.option === 3) {
+            this.updatePath(xIndex, zIndex, gridTracker, gridTrackerIndex);
+        }
     }
 
 
 
 
-    modifyTerrain(lastPoint, currentPoint) {
+    modifyTerrain(lastPoint, currentPoint, gridTrackerIndex, gridTracker) {
         let brushSize = 50;
         const positions = GRID.getVerticesData(BABYLON.VertexBuffer.PositionKind);
         const vertexCount = positions.length / 3;
 
+        // console.log(positions);
 
         for (let i = 0; i < vertexCount; i++) {
             const vertexPosition = new BABYLON.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
@@ -57,17 +63,28 @@ export default class Raise extends Tool {
                 this.currentZ = positions[i * 3 + 2];
                 this.targetY = positions[i * 3 + 1];
                 // this.editGrasses(brushSize);
+
             }
         }
+        // gridTracker[gridTrackerIndex.x][gridTrackerIndex.z].path = true;
+        gridTracker[gridTrackerIndex.x][gridTrackerIndex.z].dirty = true;
+        //also need to all tiles around the dirty tile, because the terrain can be move without explicitly hitting the edge
+        // if (gridTrackerIndex.x -1 >= 0) gridTracker[gridTrackerIndex.x-1][gridTrackerIndex.z].dirty = true;
+        // if (gridTrackerIndex.z + 1 <= gridConfig.gridSize) gridTracker[gridTrackerIndex.x-1][gridTrackerIndex.z].dirty = true;
+        // if (gridTrackerIndex.x -1 >= 0) gridTracker[gridTrackerIndex.x-1][gridTrackerIndex.z].dirty = true;
+        // if (gridTrackerIndex.z -1 >= 0) gridTracker[gridTrackerIndex.x-1][gridTrackerIndex.z].dirty = true;
 
         // Ensure the mesh is marked as updated
+
+
         let normals = [];
         BABYLON.VertexData.ComputeNormals(positions, GRID.getIndices(), normals, { useRightHandedSystem: true });
         GRID.setVerticesData(BABYLON.VertexBuffer.NormalKind, normals);
         GRID.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions, true);
+        GRID.convertToFlatShadedMesh();
+
         GRID.refreshBoundingInfo();
         GRID.markAsDirty();
-        GRID.convertToFlatShadedMesh();
 
 
         // if GRAPHICS.HIGH
@@ -88,9 +105,27 @@ export default class Raise extends Tool {
         // this.snapGrasses();
         // reloadGrass();
 
+        // mark all as dirty, until specific parts work
+        for (let i = 0; i < this.terrain.gridTracker.length; i++) {
+            for (let j = 0; j < this.terrain.gridTracker[i].length; j++) {
+                this.terrain.gridTracker[i][j].dirty = true;
+            }
+        }
         updateGrassThin();
+
+        // snap player above terrain
+        this.snapPlayer();
     }
 
+    snapPlayer() {
+        // get terrain height
+        let charHeight = 10;
+        // raycast down
+        // if ( dummyAggregate.body.transformNode._absolutePosition.y < terrainHeight + charHeight ) {
+        // DUMMY.jumpToY( terrainHeight + charHeight); 
+        // DUMMY.jumpToY( 100); 
+        // }
+    }
 
     snapGrasses() {
 
@@ -129,6 +164,27 @@ export default class Raise extends Tool {
             });
         }
 
+    }
+
+    updatePath(x, z, gridTracker, gridTrackerIndex) {
+        x = x + Math.floor(gridConfig.gridSize / 2); //gridsize /2 floor 
+        z = z + Math.floor(gridConfig.gridSize / 2);
+
+        const currentColors = GRID.getVerticesData(BABYLON.VertexBuffer.ColorKind);
+
+        const startIndex = x * 6 + (z * 6 * gridSize);
+        const endIndex = startIndex + 6; // 6 vertices per square (two triangles), 4 RGBA values per vertex
+        for (let i = startIndex; i < endIndex; i++) {
+            currentColors[(i * 4) + 0] = 0; // Red
+            currentColors[(i * 4) + 1] = currentColors[(i * 4) + 1]; // Green //Used for brightness
+            currentColors[(i * 4) + 2] = 1; // Blue
+            currentColors[(i * 4) + 3] = 1; // Alpha
+        }
+
+        gridTracker[gridTrackerIndex.x][gridTrackerIndex.z].path = true;
+        gridTracker[gridTrackerIndex.x][gridTrackerIndex.z].dirty = true;
+
+        GRID.setVerticesData(BABYLON.VertexBuffer.ColorKind, currentColors);
     }
 
     editGrasses(brushSize) {

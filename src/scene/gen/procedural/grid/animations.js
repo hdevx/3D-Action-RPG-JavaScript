@@ -179,3 +179,22 @@ export function disposeAnimation(scene, object, callback) {
         object.dispose(); // Dispose after animation
     });
 }
+
+export function entryAnimationCeiling(scene, object) {
+    const popInAnim = new BABYLON.Animation("popInAnim", "scaling", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    const keys = [
+        { frame: 0, value: new BABYLON.Vector3(0, 0, 0) },
+        { frame: 30, value: new BABYLON.Vector3(5 * gridConfig.cellSize / 60, 5 * gridConfig.cellSize / 60, 5 * gridConfig.cellSize / 60) }
+    ];
+    popInAnim.setKeys(keys);
+
+    const easingFunction = new BABYLON.QuinticEase();
+    easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEOUT);
+    popInAnim.setEasingFunction(easingFunction);
+
+    object.animations = [popInAnim];
+
+    scene.beginAnimation(object, 0, 30, false, 1, () => {
+        // after animation finishes
+    });
+}

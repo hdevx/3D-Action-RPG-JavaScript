@@ -1,4 +1,4 @@
-import { createGrid } from "./grid/grid.js";
+import { createInputGrid } from "./grid/grid.js";
 export function setupProcedural(scene, engine, meshes) {
     // setupEditableTerrain(scene);
 
@@ -7,7 +7,7 @@ export function setupProcedural(scene, engine, meshes) {
     // createBox(scene);
 
     //interior
-    createGrid(scene, meshes);
+    createInputGrid(scene, meshes);
 
     // setupBoxBuilder(scene, meshes);
 }

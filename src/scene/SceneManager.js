@@ -11,8 +11,6 @@ import { createBuilder } from './scenes/builder.js';
 class SceneManager {
   constructor(canvasId, engine) {
     this.canvas = document.getElementById(canvasId);
-    // if (engine) this.engine = engine;
-    // else this.engine = new BABYLON.Engine(this.canvas, true);
     this.engine = new BABYLON.Engine(this.canvas, true);
     this.guiTextures = new Map();
     this.scenes = [];
@@ -30,14 +28,6 @@ class SceneManager {
     };
   }
 
-  async initializeWebGPU() {
-    // console.log(this.canvas);
-    // this.engine = new BABYLON.WebGPUEngine(this.canvas);
-    // await this.engine.initAsync();
-    console.log('WebGPU Engine initialized');
-    return;
-  }
-
 
   async loadScene(sceneCreationFunction) {
     const scene = await sceneCreationFunction(this.engine);
@@ -52,7 +42,6 @@ class SceneManager {
     if (this.activeScene) {
       this.engine.stopRenderLoop();
       if (DEBUG) this.activeScene.debugLayer.hide();
-      // this.disposeActiveScene();
       //   this.activeScene.dispose(); // Optional: dispose only if not planning to return to this scene
     }
     this.activeScene = this.scenes[index];
@@ -67,9 +56,12 @@ class SceneManager {
   // todo map of scenes near the current scene
   // in this case, just load starting zone
   async start() {
-    if (WEBGPU) {
-      await this.initializeWebGPU();
-    }
+
+    let timeout = 100;
+    if (!FAST_RELOAD) timeout = 1000;
+    setTimeout(() => {
+      this.canvas.classList.add('visible');
+    }, timeout);
 
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -81,10 +73,7 @@ class SceneManager {
 
     await this.loadScene(defaultScene);
     await this.switchToScene(0);
-
-    // this.loadScene(createBuilder).then(() => {
-    //   this.switchToScene(0);
-    // });
+    this.canvas.focus();
 
     // Uncomment this for key based scene switching. 
     // await this.loadScene(this.sceneCreators['inn']);
@@ -103,8 +92,12 @@ class SceneManager {
     window.addEventListener('resize', () => {
       this.engine.resize();
     });
-  }
 
+    const endTime = performance.now();
+    const domLoadTime = endTime - startTime;
+    console.log(`Scene loaded in ${domLoadTime.toFixed(2)} milliseconds`);
+
+  }
 }
 
 export default SceneManager;

@@ -15,20 +15,27 @@ import { createWall2Story } from "./place/wall/wall.js";
 
 let gridTracker;
 let scene;
+// Meshes should be global
 let meshes;
 export function createGridTracker(scenePassed, meshesPassed) {
     scene = scenePassed;
-    meshes = meshesPassed;
-    gridTracker = new Array(gridSize).fill(null).map(() => new Array(gridSize).fill(false));
+    if (meshesPassed) meshes = meshesPassed;
+    // gridTracker = new Array(gridSize).fill(null).map(() => new Array(gridSize).fill(false));
+    gridTracker = new Array(gridSize).fill(null).map(() =>
+        new Array(gridSize).fill(null).map(() => ({ f: false, dirty: false, path: false }))
+    );
+    // gridTracker = new Array(gridSize).fill(null).map(() => new Array(gridSize).fill({ v: false, d: true }));
+    createCeilingMaterial();
+
     return gridTracker;
 }
 
 // Function to update walls for a specific cell
-function updateWallsForCell(x, z) {
+export function updateWallsForCell(x, z, entryAnim) {
     if (x < 0 || x > gridSize - 1 || z < 0 || z > gridSize - 1) { return; }
     const key = `cell_${x}_${z}`;
     let cell = scene.getMeshByName(key);
-    if (!gridTracker[x][z]) {
+    if (!gridTracker[x][z].f) {
         cell?.dispose();
         return;
     }
@@ -46,6 +53,7 @@ function updateWallsForCell(x, z) {
         const neighbor = getNeighbor(x, z, direction);
         const wallKey = `${key}_wall_${direction}`;
         let wall = scene.getMeshByName(wallKey);
+
         if (neighbor === false) {
             // if (building.hasRoof) {}
             // if (!wall) {
@@ -58,14 +66,24 @@ function updateWallsForCell(x, z) {
             // console.log("building new wall" + key);
             wall?.dispose();
             const cornerInfo = detectCorner(x, z, direction);
+
             wall = createWall2Story(x, z, direction, cellSize, key, cornerInfo);
             wall.parent = gridTracker.parentNode;
-            entryAnimationWall(scene, wall);
+            if (entryAnim) entryAnimationWall(scene, wall);
+            else {
+                wall.scaling = new BABYLON.Vector3(20, 5, 20);
+            }
+
+
 
         } else {
             wall?.dispose();
         }
+
     });
+
+    updateCeilingTile(x, z);
+
 }
 
 
@@ -108,21 +126,25 @@ function getNeighbor(x, z, direction) {
         case 'west': nx -= 1; break;
     }
     if (nx < 0 || nx >= gridSize || nz < 0 || nz >= gridSize) return false;
-    return gridTracker[nx][nz];
+    return gridTracker[nx][nz].f;
 }
 
 export function updateCellAndSurronding(gridTrackerIndex) {
-    updateWallsForCell(gridTrackerIndex.x, gridTrackerIndex.z);
+    updateWallsForCell(gridTrackerIndex.x, gridTrackerIndex.z, true);
 
     // also update walls for each cell around
-    updateWallsForCell(gridTrackerIndex.x, gridTrackerIndex.z + 1);
-    updateWallsForCell(gridTrackerIndex.x, gridTrackerIndex.z - 1);
-    updateWallsForCell(gridTrackerIndex.x + 1, gridTrackerIndex.z + 1);
-    updateWallsForCell(gridTrackerIndex.x + 1, gridTrackerIndex.z);
-    updateWallsForCell(gridTrackerIndex.x + 1, gridTrackerIndex.z - 1);
-    updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z + 1);
-    updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z);
-    updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z - 1);
+    setTimeout(() => {
+        // check if each index is marked as dirty, only update then for animation feel
+        updateWallsForCell(gridTrackerIndex.x, gridTrackerIndex.z + 1, false);
+        updateWallsForCell(gridTrackerIndex.x, gridTrackerIndex.z - 1, false);
+        updateWallsForCell(gridTrackerIndex.x + 1, gridTrackerIndex.z + 1, false);
+        updateWallsForCell(gridTrackerIndex.x + 1, gridTrackerIndex.z, false);
+        updateWallsForCell(gridTrackerIndex.x + 1, gridTrackerIndex.z - 1, false);
+        updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z + 1, false);
+        updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z, false);
+        updateWallsForCell(gridTrackerIndex.x - 1, gridTrackerIndex.z - 1, false);
+    }, 1000);
+
 }
 
 // export function updateCellAndSurronding(gridTrackerIndex) {
@@ -133,6 +155,112 @@ export function updateCellAndSurronding(gridTrackerIndex) {
 //     }
 // }
 
+let ceilingMaterial;
+function createCeilingMaterial() {
+    ceilingMaterial = new BABYLON.PBRMaterial("ceilingMat", scene);
+    // ceilingMaterial.emissiveColor = new BABYLON.Color4(0.18, 0.117, 0.04, 1.0);
+    ceilingMaterial.emissiveColor = new BABYLON.Color3(0.014, 0.004, 0.001);
+    return ceilingMaterial;
+}
+
+function updateCeilingTile(gridIndexX, gridIndexZ) {
+    const x = gridIndexX;
+    const z = gridIndexZ;
+    const key = `ceiling_${x}_${z}`;
+    let ceilingTile = scene.getMeshByName(key);
+
+    // Check if a ceiling tile is needed
+    const isCeilingNeeded = checkIfCeilingNeeded(x - 1, z);
+
+    if (isCeilingNeeded) {
+        if (!ceilingTile) {
+            // Create new ceiling tile if it doesn't exist
+            ceilingTile = BABYLON.MeshBuilder.CreateBox(key, { width: cellSize, height: 0.1, depth: cellSize }, scene);
+
+            const positionX = (x * cellSize) - (gridSize * cellSize / 2);// + (cellSize);
+            const positionZ = (z * cellSize) - (gridSize * cellSize / 2);
+
+            ceilingTile.position = new BABYLON.Vector3(positionX, 120, positionZ);
+            ceilingTile.material = ceilingMaterial;
+            ceilingTile.isPickable = false;
+            // if (wall) ceilingTile.parent = wall;
+        }
+    } else {
+        // Remove ceiling tile if it exists and is not needed
+        if (ceilingTile) {
+            ceilingTile.dispose();
+        }
+    }
+}
+function checkIfCeilingNeeded(x, z) {
+    // Check if the current cell is filled
+    if (!gridTracker[x][z].f) return false;
+
+    // // // Check all surrounding cells (including diagonals)
+    // for (let dx = -1; dx <= 1; dx++) {
+    //     for (let dz = -1; dz <= 1; dz++) {
+    //         if (dx === 0 && dz === 0) continue; // Skip the current cell
+    //         const nx = x + dx;
+    //         const nz = z + dz;
+
+    //         // If any surrounding cell is empty or out of bounds, a ceiling is needed
+    //         if (nx < 0 || nx >= gridSize || nz < 0 || nz >= gridSize || !gridTracker[nx][nz]) {
+    //             return true;
+    //         }
+    //     }
+    // }
+
+
+    // Check if north, east, and northeast cells are filled
+    // This works for single cell row roofs
+    const isNorthFilled = z > 0 && gridTracker[x][z - 1].f;
+    const isEastFilled = x < gridSize - 1 && gridTracker[x + 1][z].f;
+    const isNorthEastFilled = x < gridSize - 1 && z > 0 && gridTracker[x + 1][z - 1].f;
+
+    const isNorthEastSouthWestFilled = isNorthFilled && isEastFilled && isNorthEastFilled;
+
+
+    const isSouthFilled = gridTracker[x][z + 1].f;
+
+    // Ceiling is needed only when all three cells are filled
+    // return isNorthFilled && isEastFilled && isNorthEastFilled;
+
+    // Check if all surrounding cells are filled
+    // const isAllSurroundingFilled = checkAllSurroundingFilled(x - 1, z);
+
+    // Ceiling is needed when either condition is met
+    return isNorthEastSouthWestFilled;
+}
+
+
+
+// function checkIfCeilingNeeded(x, z) {
+//     // Check if this cell is the southwest corner of a 2x2 filled square
+//     return isCellFilled(x, z) && isCellFilled(x + 1, z) && isCellFilled(x, z - 1) && isCellFilled(x + 1, z - 1);
+// }
+
+// function isCellFilled(x, z) {
+//     // Check if the cell is within bounds and filled
+//     return x >= 0 && x < gridSize && z >= 0 && z < gridSize && gridTracker[x][z];
+// }
+
+
+function checkAllSurroundingFilled(x, z) {
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+            if (dx === 0 && dz === 0) continue; // Skip the current cell
+            const nx = x + dx;
+            const nz = z + dz;
+
+            // If any surrounding cell is empty or out of bounds, return false
+            if (nx < 0 || nx >= gridSize || nz < 0 || nz >= gridSize || !gridTracker[nx][nz].f) {
+                return false;
+            }
+        }
+    }
+    // If we've checked all surrounding cells and none were empty, return true
+    return true;
+}
 
 
 // function detectCorner(x, z, direction) {
@@ -157,69 +285,119 @@ function detectCorner(x, z, direction) {
     const rightDir = getRightDirection(direction);
 
     const front = getNeighbor(x, z, direction);
+    const back = getNeighbor(x, z, getBackDirection(direction));
     const frontLeft = getNeighbor(x, z, direction) && getNeighbor(x, z, leftDir);
     const frontRight = getNeighbor(x, z, direction) && getNeighbor(x, z, rightDir);
-    const backLeft = gridTracker[getBackLeftCoordinates(x, z, direction).x][getBackLeftCoordinates(x, z, direction).z];
-    const backRight = gridTracker[getBackRightCoordinates(x, z, direction).x][getBackRightCoordinates(x, z, direction).z];
+
+
+    const backLeft = gridTracker[getBackLeftCoordinates(x, z, direction).x][getBackLeftCoordinates(x, z, direction).z].f;
+    const backRight = gridTracker[getBackRightCoordinates(x, z, direction).x][getBackRightCoordinates(x, z, direction).z].f;
 
     const left = getNeighbor(x, z, leftDir);
     const right = getNeighbor(x, z, rightDir);
 
     let cornerInfo = {
-        left: { isCorner: false, type: null },
-        right: { isCorner: false, type: null }
+        left: { isCorner: false, type: 'flat' },
+        right: { isCorner: false, type: 'flat' }
     };
 
     // Check left side
     if (!front && !left) {
-        cornerInfo.left.isCorner = true;
         cornerInfo.left.type = 'inset';
     }
 
-    // Check right side
+    if (left && !front && !back && !backLeft) {
+        cornerInfo.left.type = 'flat';
+    }
+
+    if (!left && !back && !front) {
+        cornerInfo.left.type = 'inset';
+    }
+
+    if (left && !back && backLeft) {
+        cornerInfo.left.type = 'outset';
+    }
+
+
+    // if (!left && !back && !front) {
+    //     cornerInfo.left.type = 'inset';
+    // }
+
+    // // Check right side
     if (!front && !right) {
-        cornerInfo.right.isCorner = true;
         cornerInfo.right.type = 'inset';
     }
 
-    if (backLeft && !backRight) {
-        cornerInfo.left.isCorner = true;
-        cornerInfo.left.type = 'outset';
-        cornerInfo.debug = true;
+    if (right && !front && !back && !backRight) {
+        cornerInfo.right.type = 'flat';
     }
-    if (backRight && !backLeft) {
-        cornerInfo.right.isCorner = true;
+
+    if (!right && !back && !front) {
+        cornerInfo.right.type = 'inset';
+    }
+
+    if (right && !back && backRight) {
         cornerInfo.right.type = 'outset';
-        cornerInfo.debug = true;
     }
-    if (backRight && backLeft) {
-        cornerInfo.left.isCorner = true;
-        cornerInfo.right.isCorner = true;
+
+    if (right && !back && backRight && left && backLeft) {
         cornerInfo.left.type = 'outset';
         cornerInfo.right.type = 'outset';
-        cornerInfo.debug = true;
     }
+
+    if (backRight && right && backLeft && left) {
+        cornerInfo.left.type = 'outset';
+        cornerInfo.right.type = 'outset';
+    }
+
+    if (backRight && right) {
+        cornerInfo.right.type = 'outset';
+    }
+
+    if (backLeft && left) {
+        cornerInfo.left.type = 'outset';
+        // cornerInfo.debug = true;
+    }
+
+    // if (backLeft && !backRight) {
+    //     cornerInfo.left.isCorner = true;
+    //     cornerInfo.left.type = 'outset';
+    // }
+    // if (backRight && !backLeft) {
+    //     cornerInfo.right.isCorner = true;
+    //     cornerInfo.right.type = 'outset';
+    // }
+    // if (backRight && backLeft) {
+    //     cornerInfo.left.isCorner = true;
+    //     cornerInfo.right.isCorner = true;
+    //     cornerInfo.left.type = 'outset';
+    //     cornerInfo.right.type = 'outset';
+    // }
 
 
     return cornerInfo;
 }
 
 function getBackLeftCoordinates(x, z, direction) {
+    if (x <= 0 || x >= gridSize || z < 0 || z >= gridSize) return { x: 0, z: 0 }; //Todo, edges of grid give error for similar methods
     switch (direction) {
         case 'north': return { x: x - 1, z: z - 1 };
         case 'south': return { x: x + 1, z: z + 1 };
         case 'east': return { x: x + 1, z: z - 1 };
         case 'west': return { x: x - 1, z: z + 1 };
     }
+
 }
 
 function getBackRightCoordinates(x, z, direction) {
+    if (x < 0 || x >= gridSize || z < 0 || z >= gridSize) return { x: 0, z: 0 };
     switch (direction) {
         case 'north': return { x: x + 1, z: z - 1 };
         case 'south': return { x: x - 1, z: z + 1 };
         case 'east': return { x: x + 1, z: z + 1 };
         case 'west': return { x: x - 1, z: z - 1 };
     }
+
 }
 
 function getLeftDirection(direction) {
@@ -232,4 +410,10 @@ function getRightDirection(direction) {
     const directions = ['north', 'east', 'south', 'west'];
     const index = directions.indexOf(direction);
     return directions[(index + 1) % 4];
+}
+
+function getBackDirection(direction) {
+    const directions = ['north', 'east', 'south', 'west'];
+    const index = directions.indexOf(direction);
+    return directions[(index + 2) % 4];
 }

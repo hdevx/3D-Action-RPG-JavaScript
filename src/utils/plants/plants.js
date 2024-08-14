@@ -10,6 +10,7 @@ function setupMeshes() {
 
 let grassInfo = {};
 export function reloadGrass() {
+    // load this from file, instead of raycasting
 
     const fm = name => grassMeshes.find(mesh => mesh.name === name);
     let grassInstance = fm('Grass_2').clone("grassInstance");
@@ -25,7 +26,7 @@ export function reloadGrass() {
 
 
     grassInfo.thinInstances = [];
-    scatterThin(grassInstance, -100, 100, -100, 100, 2000); //2000);
+    scatterThin(grassInstance, -100, 100, -100, 100, 7000); //2000);
     let flowersInstance = fm('Grass_3').clone('flowersInstance');
     flowersInstance.parent = null;
     flowersInstance.position.x = 40;
@@ -84,7 +85,8 @@ export function reloadGrass() {
     woodLeafInstance2.position.z = 5;
     woodLeafInstance2.rotation.x = 12.0;
     woodLeafInstance2.scaling.y = 5;
-    scatterThin(woodInstance2, -100, 100, -100, 100, 4, true, 2.0, woodLeafInstance2);
+    scatterThin(woodInstance2, -100, 100, -100, 100, 40, true, 2.0, woodLeafInstance2);
+    // mesh.hasVertexAlpha = false;
 }
 
 
@@ -255,14 +257,12 @@ function getCoordinatesFromMatrix(matrix, i) {
 
 export function updateGrassThin() {
 
-
     // let matrices = grassInfo.grass.matrices;
     // console.log(grassInfo.grass.bufferMatrices);
 
     // let newMatricies = grassInfo.grass.bufferMatrices;
     if (grassInfo.thinInstances.length === 0) { return; }
     for (let g = 0; g < grassInfo.thinInstances.length; g++) {
-
 
         const maxIterations = grassInfo.thinInstances[g].bufferMatrices.length / 16;
         // console.log(grassInfo.thinInstances);
@@ -278,9 +278,12 @@ export function updateGrassThin() {
             // find the cell the grass is on
             let gridCords = convertToGridSpace(cords.x, cords.z);
             let gridTrackerIndex = GRID.convert(gridCords.x, gridCords.z);
-            // console.log(GRID.gridTracker[gridTrackerIndex.x][gridTrackerIndex.z]);
+
+            // skip if the grid is not dirty
+            if (!GRID.gridTracker[gridTrackerIndex.x][gridTrackerIndex.z].dirty) { continue; }
+
             // if the cell is filled, set height -1000
-            if (GRID.gridTracker[gridTrackerIndex.x][gridTrackerIndex.z]) {
+            if (GRID.gridTracker[gridTrackerIndex.x][gridTrackerIndex.z].f || GRID.gridTracker[gridTrackerIndex.x][gridTrackerIndex.z].path) {
                 grassInfo.thinInstances[g].bufferMatrices[i * 16 + 13] = -1000;
             } else { // else set it to the terrain 
                 let newY = getHeightOnGridAtPoint(cords.x, cords.z);
@@ -294,13 +297,9 @@ export function updateGrassThin() {
             }
 
 
-
         }
-
         grassInfo.thinInstances[g].parent.thinInstanceSetBuffer("matrix", grassInfo.thinInstances[g].bufferMatrices, 16, true); // matrix buffer is updateable, static is false
-
     }
-
 }
 
 function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount, rotate, variance, additional) {
@@ -362,7 +361,9 @@ function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount, rotate, var
         }
 
         // let height = getHeightAtPoint(x, z);
-        let height = getHeightOnGridAtPoint(x, z);
+        // let height = getHeightOnGridAtPoint(x, z);
+        // Todo, load from file
+        let height = 0;
         // height /= 5;
         // console.log(height);
 
@@ -385,6 +386,17 @@ function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount, rotate, var
         matrix.copyToArray(bufferMatrices, 16 * i);
     }
 
+    thinGrass.thinInstanceRegisterAttribute("color2", 4);
+    var bufferColors = new Float32Array(4 * numInstances);
+    for (let i = 0; i < numInstances; i++) {
+        bufferColors[i * 4 + 0] = 1;
+        const brightness = Math.random() + 0.5;
+        bufferColors[i * 4 + 1] = brightness;
+        bufferColors[i * 4 + 2] = 1;
+        bufferColors[i * 4 + 3] = 1;
+    }
+    thinGrass.thinInstanceSetBuffer("color2", bufferColors, 4);
+
     // var idx = thinGrass.thinInstanceAdd(matrices);
     thinGrass.thinInstanceSetBuffer("matrix", bufferMatrices, 16);
     if (additional) {
@@ -393,8 +405,8 @@ function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount, rotate, var
         addtionalMesh.position.y += 70;
         addtionalMesh.thinInstanceSetBuffer("matrix", bufferMatrices, 16);
 
-        grassInfo.thinInstances.push({ 'parent': thinGrass, 'bufferMatrices': bufferMatrices });
-        grassInfo.grass = { 'parent': thinGrass, 'bufferMatrices': bufferMatrices };
+        grassInfo.thinInstances.push({ 'parent': addtionalMesh, 'bufferMatrices': bufferMatrices });
+        grassInfo.grass = { 'parent': addtionalMesh, 'bufferMatrices': bufferMatrices };
     }
 
     grassInfo.thinInstances.push({ 'parent': thinGrass, 'bufferMatrices': bufferMatrices });
@@ -405,7 +417,7 @@ function scatterThin(grass_1, minX, maxX, minZ, maxZ, instanceCount, rotate, var
 
 // use mesh library
 let grassMeshes = null;
-export function addGrass(scene, models) {
+export async function addGrass(scene, models) {
     let grasses = models["grass"];
     grasses.scaling = new BABYLON.Vector3(1, 1, 1);
     grasses.name = "veg";
@@ -459,9 +471,8 @@ export function addGrass(scene, models) {
             fragment: "../../../shaders/env/grass/grass_thin/grass_thin",
         },
         {
-            attributes: ["position", "normal", "uv", "color", "world0", "world1", "world2", "world3"],
+            attributes: ["position", "normal", "uv", "color", "world0", "world1", "world2", "world3", "color2"],
             uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "time", "viewProjection", "vFogInfos", "vFogColor"],
-            needAlphaBlending: true,
             needAlphaTesting: true
         });
 
@@ -481,10 +492,10 @@ export function addGrass(scene, models) {
         }
     );
 
-    const mainTexture = new BABYLON.Texture(
-        'https://dl.dropbox.com/s/uuoym37nsr17pv2/grass2.png',
-        scene
-    );
+    // const mainTexture = new BABYLON.Texture(
+    //     'https://dl.dropbox.com/s/uuoym37nsr17pv2/grass2.png',
+    //     scene
+    // );
 
     // shaderMaterial.setTexture('textureSampler', mainTexture);
     shaderMaterial.setTexture('textureSampler', grassTexture);

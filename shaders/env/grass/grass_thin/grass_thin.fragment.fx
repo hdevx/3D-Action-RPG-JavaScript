@@ -11,6 +11,9 @@
     uniform vec3 vFogColor;
     varying float fFogDistance;
 
+    varying vec4 vColor;
+        varying vec4 vColor2;
+
  float CalcFogFactor()
     {
         float fogCoeff = 1.0;
@@ -61,6 +64,11 @@
     gl_FragColor.r = gl_FragColor.r * 0.4;
     gl_FragColor.g = gl_FragColor.g * 0.4;
     gl_FragColor.b = gl_FragColor.b * 0.4;
+
+    float shadow = 0.7 + (2.0 * vColor.r);  //* vColor.g;
+    // gl_FragColor.rgb *= shadow;
+    // gl_FragColor.rgb *= vColor2.g;
+
     gl_FragColor.a = gl_FragColor.a;
 
 //   gl_FragColor = vec4(textureColor.rgb, textureColor.a);

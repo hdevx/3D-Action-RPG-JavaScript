@@ -9,7 +9,10 @@ export default class Settings extends Tool {
     }
 
     click(xIndex, zIndex, gridTrackerIndex, gridTracker, pickedPoint) {
-
+        // console.log("export");
+        // BABYLON.GLTF2Export.GLTFAsync(this.scene, "fileName").then((gltf) => {
+        //     gltf.downloadFiles();
+        // });
     }
 
 

@@ -34,6 +34,10 @@ export async function setupPhysics(scene, spawnPoint) {
         havokInstance.HP_Body_SetPosition(dummyAggregate.body._pluginData.hpBodyId, [spawnPoint.x, spawnPoint.y, spawnPoint.z]);
     };
 
+    dummyAggregate.jumpToY = function (y) {
+        havokInstance.HP_Body_SetPosition(dummyAggregate.body._pluginData.hpBodyId, [dummyAggregate.body.transformNode._absolutePosition.x, y, dummyAggregate.body.transformNode._absolutePosition.z]);
+    };
+
 
 
 

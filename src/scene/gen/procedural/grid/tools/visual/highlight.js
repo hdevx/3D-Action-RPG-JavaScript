@@ -52,7 +52,8 @@ export function updateHighlight(event) {
         const pickedPoint = pickResult.pickedPoint;
         const xIndex = Math.floor((pickedPoint.x + (gridConfig.gridSize * gridConfig.cellSize / 2)) / gridConfig.cellSize);
         const zIndex = Math.floor((pickedPoint.z + (gridConfig.gridSize * gridConfig.cellSize / 2)) / gridConfig.cellSize);
-
+        // console.log(xIndex + " " + zIndex);
+        // updatePath(xIndex, zIndex);
         if (xIndex !== currentHighlightedCell.x || zIndex !== currentHighlightedCell.z) {
             highlightMesh.position.x = xIndex * gridConfig.cellSize - (gridConfig.gridSize * gridConfig.cellSize / 2) + gridConfig.cellSize / 2;
             highlightMesh.position.z = zIndex * gridConfig.cellSize - (gridConfig.gridSize * gridConfig.cellSize / 2) + gridConfig.cellSize / 2;
@@ -70,4 +71,19 @@ export function updateHighlight(event) {
             currentHighlightedCell = { x: -1, z: -1 };
         });
     }
+}
+
+function updatePath(x, z) {
+    const currentColors = GRID.getVerticesData(BABYLON.VertexBuffer.ColorKind);
+
+    const startIndex = x * 6 + (z * 6 * gridConfig.gridSize);
+    const endIndex = startIndex + 6; // 6 vertices per square (two triangles), 4 RGBA values per vertex
+    for (let i = startIndex; i < endIndex; i++) {
+        currentColors[(i * 4) + 0] = 0; // Red
+        currentColors[(i * 4) + 1] = currentColors[(i * 4) + 1]; // Green //Used for brightness
+        currentColors[(i * 4) + 2] = 1; // Blue
+        currentColors[(i * 4) + 3] = 1; // Alpha
+    }
+
+    GRID.setVerticesData(BABYLON.VertexBuffer.ColorKind, currentColors);
 }

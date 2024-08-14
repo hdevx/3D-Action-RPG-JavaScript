@@ -141,38 +141,48 @@ export function createWall2Story(x, z, direction, size, key, cornerInfo) {
 
 function createRoof(cornerInfo) {
     let meshes = MESH_LIBRARY;
-    let roof;
+    let roof = createNonFlatWall(MESH_LIBRARY['roof'], cornerInfo); //MESH_LIBRARY.buildings['debug']['roof']
 
+    return roof;
+    // add window
+}
+
+function createNonFlatWall(meshes, cornerInfo) {
+    let roof = null;
+    // let roof = meshes['Roof_Left_Flat_Right_Flat'][0].createInstance("roof_instance");
     // add roof wall
     //                     'Roof_Outset_Both': [fm('Roof_Outset_Both')],
     //                         'Roof_Outset_Left': [fm('Roof_Outset_Left')],
     //                             'Roof_Outset_Right': [fm('Roof_Outset_Right')]
     // }
-    if (cornerInfo.left.type == "outset" || cornerInfo.right.isCorner == "outset") {
-        if (cornerInfo.left.type == "outset") {
-            roof = meshes['roof']['Roof_Outset_Right'][0].createInstance("roof_instance");
-            // if (cornerInfo.debug) { roof.showBoundingBox = true; }
-
-        }
-        if (cornerInfo.right.type == "outset") {
-            roof = meshes['roof']['Roof_Outset_Left'][0].createInstance("roof_instance");
-        }
-
-
-    } else {
-        if (cornerInfo.left.isCorner && cornerInfo.right.isCorner) {
-            roof = meshes['roof']['Roof_Inset_Both'][0].createInstance("roof_instance");
-        } if (cornerInfo.left.isCorner && !cornerInfo.right.isCorner) {
-            roof = meshes['roof']['Roof_Inset_Left'][0].createInstance("roof_instance");
-        } if (!cornerInfo.left.isCorner && cornerInfo.right.isCorner) {
-            roof = meshes['roof']['Roof_Inset_Right'][0].createInstance("roof_instance");
-        } if (!cornerInfo.left.isCorner && !cornerInfo.right.isCorner) {
-            roof = meshes['roof']['Roof_Wall'][0].createInstance("roof_instance");
-        }
+    if (cornerInfo.left.type === "flat" && cornerInfo.right.type === "flat") {
+        roof = meshes['Roof_Left_Flat_Right_Flat'][0].createInstance("roof_instance");
+    } if (cornerInfo.left.type === "flat" && cornerInfo.right.type === "inset") {
+        roof = meshes['Roof_Left_Inset_Right_Flat'][0].createInstance("roof_instance");
+    } if (cornerInfo.left.type === "flat" && cornerInfo.right.type === "outset") {
+        roof = meshes['Roof_Left_Outset_Right_Flat'][0].createInstance("roof_instance");
     }
+
+    if (cornerInfo.left.type === "inset" && cornerInfo.right.type === "flat") {
+        roof = meshes['Roof_Left_Flat_Right_Inset'][0].createInstance("roof_instance");
+    } if (cornerInfo.left.type === "inset" && cornerInfo.right.type === "inset") {
+        roof = meshes['Roof_Left_Inset_Right_Inset'][0].createInstance("roof_instance");
+    } if (cornerInfo.left.type === "inset" && cornerInfo.right.type === "outset") {
+        roof = meshes['Roof_Left_Outset_Right_Inset'][0].createInstance("roof_instance");
+    }
+
+    if (cornerInfo.left.type === "outset" && cornerInfo.right.type === "flat") {
+        roof = meshes['Roof_Left_Flat_Right_Outset'][0].createInstance("roof_instance");
+    } if (cornerInfo.left.type === "outset" && cornerInfo.right.type === "inset") {
+        roof = meshes['Roof_Left_Inset_Right_Outset'][0].createInstance("roof_instance");
+    } if (cornerInfo.left.type === "outset" && cornerInfo.right.type === "outset") {
+        roof = meshes['Roof_Left_Outset_Right_Outset'][0].createInstance("roof_instance");
+    }
+
+    // console.log(cornerInfo);
+    if (cornerInfo.debug) { roof.showBoundingBox = true; }
+
 
     return roof;
 
-
-    // add window
 }

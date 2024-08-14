@@ -5,6 +5,9 @@ import Raise from "./terrain/raise.js";
 
 
 export function createTools(scene, meshes, gridTracker, grid) {
+    document.getElementById('toolBar').innerHTML = '';
+
+
     let tools = {
         tools: {},
         selectedTool: null,
@@ -19,6 +22,7 @@ export function createTools(scene, meshes, gridTracker, grid) {
         { name: 'Raise' },
         { name: 'Lower' },
         { name: 'Flatten' },
+        { name: 'Path' }
         // new Raise("Raise", scene, meshes, grid, tools, "./assets/util/ui/icons/path.png", {}),
         // new Raise("Lower", scene, meshes, grid, tools, "./assets/util/ui/icons/path.png", {}),
         // new Raise("Flatten", scene, meshes, grid, tools, "./assets/util/ui/icons/path.png", {}),
@@ -30,7 +34,9 @@ export function createTools(scene, meshes, gridTracker, grid) {
     ];
 
     const settingsSubTools = [
-        { name: 'Export' },
+        // { name: 'Load' },
+        // { name: 'Load World' },
+        { name: 'Save' }
         // { name: 'Door' }
     ];
 
@@ -42,7 +48,7 @@ export function createTools(scene, meshes, gridTracker, grid) {
 
     // Set the initial selected tool
     tools.selectedTool = tools.tools.place;
-    console.log(tools);
+    // console.log(tools);
 
 
     return tools;

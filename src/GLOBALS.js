@@ -3,6 +3,7 @@ let DEBUG = false;
 let SCENE_MANAGER = {};
 
 let PLAYER = {};
+let DUMMY = {};
 
 var DMGPOP = {};
 
@@ -21,9 +22,15 @@ let MESH_LIBRARY = {};
 //   'Plants'
 //     'Grass'
 //     'Tree'
-//   'BuildingType'
+//   'Buildings'
+//     'BuildingType'
 //     'Wall'
 //     'Roof'
+
+// array of 9 grids, to load in dynamically around the player
+let GRIDS;
+
+let TOOLS;
 
 let targetBaseOnCameraView = true; // if false target based on character rotation
 // use touch joystick for mobile options
@@ -38,6 +45,7 @@ let CANVASES = []; //One canvas For Game, one for Mobile Input Detection
 let inputMap = {};
 
 
+let FAST_RELOAD = false; //Enable for fast development, disable for prod 
 
 
 // Graphics Settings

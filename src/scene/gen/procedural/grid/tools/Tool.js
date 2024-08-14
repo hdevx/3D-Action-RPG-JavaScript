@@ -1,3 +1,4 @@
+import { loadGrid, loadMeshAndGridTracker, loadSurrondingGrids, loadTileToGrid, saveGridToTile, saveMeshAndGridTracker } from "../grids.js";
 
 export default class Tool {
     constructor(name, scene, meshes, grid, tools, imageSrc, subTools) {
@@ -32,6 +33,7 @@ export default class Tool {
         img.className = 'toolIcon';
 
         // Set the onclick event for the button
+        const canvas = document.getElementById('renderCanvas');
         img.addEventListener('click', () => {
             const toolName = this.name.toLowerCase();
             this.tools.setSelectedTool(toolName);
@@ -40,6 +42,7 @@ export default class Tool {
             const toolButtons = document.querySelectorAll('.toolIcon');
             toolButtons.forEach(btn => btn.classList.remove('selected'));
             img.classList.add('selected');
+            canvas.focus();
         });
 
 
@@ -60,6 +63,21 @@ export default class Tool {
                     if (subTool.name === 'Raise') { this.option = 0; }
                     if (subTool.name === 'Lower') { this.option = 1 }
                     if (subTool.name === 'Flatten') { this.option = 2; }
+                    if (subTool.name === 'Path') { this.option = 3; }
+
+                    // if (subTool.name === 'Save') { saveGridToTile(GRID, "tile.bin", true); }
+                    // if (subTool.name === 'Load') { loadTileToGrid(this.scene); }
+                    if (subTool.name === 'Save') { saveMeshAndGridTracker(GRID, "tileNew.json", true); }
+                    if (subTool.name === 'Load') {
+                        // loadGrid(this.scene);
+                        loadTileToGrid(this.scene);
+                    };
+                    if (subTool.name === 'Load World') {
+                        // loadGrid(this.scene);
+                        loadSurrondingGrids(this.scene);
+
+                    };
+
                     // Handle sub-tool selection here
                     // select the parent tool
                     const toolName = this.name.toLowerCase();
@@ -71,7 +89,8 @@ export default class Tool {
                     img.classList.add('selected');
 
 
-                    console.log(`Sub-tool ${this.option} selected`);
+                    // console.log(`Sub-tool ${this.option} selected`);
+
                 });
                 subToolContainer.appendChild(subButton);
             });

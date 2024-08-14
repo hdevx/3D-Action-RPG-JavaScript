@@ -2,6 +2,7 @@
   attribute vec3 position;
   attribute vec2 uv;
   attribute vec4 color; // Vertex color attribute
+  attribute vec4 color2; // Vertex color attribute
 
 //  attribute vec4 world0;
 //     attribute vec4 world1;
@@ -15,6 +16,7 @@ uniform float amplitude;
 
   varying vec2 vUV;
   varying vec4 vColor; // Varying to pass color to the fragment shader
+  varying vec4 vColor2; // Varying to pass color to the fragment shader
 
  uniform mat4 view;
    varying float fFogDistance;
@@ -38,7 +40,7 @@ uniform float amplitude;
     }
     
     vColor = color; // Pass vertex color to the fragment shader
-
+    vColor2 = color2;
     vec3 displacedPosition = position + vec3(0.0, wave, 0.0);
     
 
@@ -48,7 +50,6 @@ uniform float amplitude;
 
 
 
-    
     vUV = uv;
 
     // gl_Position = worldViewProjection * vec4(position, 1.0);

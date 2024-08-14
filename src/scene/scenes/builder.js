@@ -9,16 +9,19 @@ import { loadingAnim } from '../../utils/loadingAnim.js'
 import { loadModels } from '../../utils/load.js';
 
 import { Health } from '../../character/health.js';
-import { setupWater } from '../../utils/water.js';
+import { setupBuilderWater } from '../../utils/water.js';
 import { createBuilderSettings } from '../../utils/settings/builderSettings.js';
 import { setupMainPlayerMenu } from '../../character/interact/builderMenu.js';
 
 import { createMobileControls } from '../../utils/mobile/joystick.js';
 import { addGrass } from '../../utils/plants/plants.js';
+import { gridTest } from '../gen/procedural/grid/grids.js';
 
 
 export async function createBuilder(engine) {
     const scene = new BABYLON.Scene(engine);
+
+
 
     createBuilderSettings(); //Has side effects highlight outlines generated based on cell size at start
 
@@ -27,73 +30,92 @@ export async function createBuilder(engine) {
 
     const camera = setupCamera(scene, character, engine);
     camera.collisionRadius = new BABYLON.Vector3(12.5, 12.5, 12.5);
-    // load all models, make sure parallel loading for speed
-    const modelUrls = [
-        "env/builder/parts.glb", "env/exterior/grass/grass.glb"];
-    const heroModelPromise = loadHeroModel(scene, character);
-    const [heroModel, models] = await Promise.all([
-        heroModelPromise,
-        loadModels(scene, modelUrls)
-    ]);
-    const { hero, skeleton } = heroModel;
-    setupMainPlayerMenu(scene);
-    createMobileControls(scene, camera, character);
 
-    let anim = setupAnim(scene, skeleton);
-    setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate);
-    character.health = new Health("Hero", 100, dummyAggregate);
-    character.health.rotationCheck = hero;
-    character.health.rangeCheck = character;
-    PLAYER = character;
+    if (!FAST_RELOAD) {
+        // load all models, make sure parallel loading for speed
+        const modelUrls = [
+            "env/builder/parts.glb", "env/exterior/grass/grass.glb"];
+        const heroModelPromise = loadHeroModel(scene, character);
+        const [heroModel, models] = await Promise.all([
+            heroModelPromise,
+            loadModels(scene, modelUrls)
+        ]);
+        const { hero, skeleton } = heroModel;
+        setupMainPlayerMenu(scene);
+        createMobileControls(scene, camera, character);
 
-    setupEnvironment(scene);
-    let LEVEL_SIZE = 20000;
-    camera.maxZ = LEVEL_SIZE;
-    // setupWater(scene, terrain, engine, hero, -2000, LEVEL_SIZE);
-    createSkydome(scene, LEVEL_SIZE);
+        let anim = setupAnim(scene, skeleton);
+        setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate);
+        character.health = new Health("Hero", 100, dummyAggregate);
+        character.health.rotationCheck = hero;
+        character.health.rangeCheck = character;
+        PLAYER = character;
+        DUMMY = dummyAggregate;
 
-    setupPostProcessing(scene, camera);
+        setupEnvironment(scene);
+        let LEVEL_SIZE = 20000;
+        camera.maxZ = LEVEL_SIZE;
+        camera.upperRadiusLimit = 1800.8044;
+
+        createSkydome(scene, LEVEL_SIZE);
+
+        setupPostProcessing(scene, camera);
 
 
-    // let sword = addSword(scene, models["Sword2"]);
-    // createTrail(scene, engine, sword, 0.2, 40, new BABYLON.Vector3(0, 0, 0.32));
+        // let sword = addSword(scene, models["Sword2"]);
+        // createTrail(scene, engine, sword, 0.2, 40, new BABYLON.Vector3(0, 0, 0.32));
 
-    let meshes = addRoomMap(scene, models);
-    hero.getChildMeshes().forEach((value) => { meshes.push(value); });
+        let meshes = addRoomMap(scene, models);
+        hero.getChildMeshes().forEach((value) => { meshes.push(value); });
 
-    let vegatation = addGrass(scene, models);
 
-    setupLighting(scene);
+        setupLighting(scene);
 
-    setupBuilder(scene, engine, meshes, camera);
+        setupBuilder(scene, engine, meshes, camera);
+        // gridTest(scene);
 
-    // // advanced lighting
-    // // const spotLight = setupSpotlight(scene);
-    // const light = new BABYLON.DirectionalLight("directionalLight", new BABYLON.Vector3(-800, -1400, -1000), scene);
-    // light.intensity = 15.7;
-    // // // light.intensity = 0;
-    // // // light.shadowMinZ = 1800;
-    // // // light.shadowMinZ = 2100;
-    // light.shadowMinZ = 1500;
-    // light.shadowMaxZ = 2300;
-    // light.diffuse = new BABYLON.Color3(1, 1, 1);
-
-    // // let lights = [light, spotLight];
-    // // setupGI(scene, engine, lights, meshes);
-
-    // setupShadows(light, hero);
-    loadingAnim(scene);
+        //  disable for old editor with no grass
+        // let terrain = setupTerrain(scene);
+        let terrain = null;
+        setupBuilderWater(scene, GRID, engine, hero, -100, 8000, terrain);
+        // scene.fogColor = new BABYLON.Color3(135 / 255, 162 / 255, 204 / 255);
+        scene.fogColor = new BABYLON.Color3(115 / 255, 162 / 255, 209 / 255);
+        let vegatation = addGrass(scene, models);
 
 
 
-    addZReset(scene, dummyAggregate, spawnPoint);
+
+        // // advanced lighting
+        // // const spotLight = setupSpotlight(scene);
+        // const light = new BABYLON.DirectionalLight("directionalLight", new BABYLON.Vector3(-800, -1400, -1000), scene);
+        // light.intensity = 15.7;
+        // // // light.intensity = 0;
+        // // // light.shadowMinZ = 1800;
+        // // // light.shadowMinZ = 2100;
+        // light.shadowMinZ = 1500;
+        // light.shadowMaxZ = 2300;
+        // light.diffuse = new BABYLON.Color3(1, 1, 1);
+
+        // // let lights = [light, spotLight];
+        // // setupGI(scene, engine, lights, meshes);
+
+        // setupShadows(light, hero);
+        // loadingAnim(scene);
+
+        // setupWater(scene, ground, engine, dummyAggregate, -10, 2000);
+
+
+
+        addZReset(scene, dummyAggregate, spawnPoint);
+    } else {
+
+    }
     return scene;
 }
 
 function addZReset(scene, dummyAggregate) {
     scene.onBeforeRenderObservable.add(() => {
         if (dummyAggregate.body.transformNode._absolutePosition.y < -180) {
-            console.log("reseting to spawn");
             dummyAggregate.resetToSpawn();
         }
     });
@@ -110,13 +132,17 @@ function setupBuilder(scene, engine, meshes, camera) {
         'door': [fm('Door'), fm('2_WallWood')],
         'base': [fm('StoneBase')],
         'roof': {
-            'Roof_Wall': [fm('Roof_Wall')],
-            'Roof_Inset_Both': [fm('Roof_Inset_Both')],
-            'Roof_Inset_Left': [fm('Roof_Inset_Left')],
-            'Roof_Inset_Right': [fm('Roof_Inset_Right')],
-            'Roof_Outset_Both': [fm('Roof_Outset_Both')],
-            'Roof_Outset_Left': [fm('Roof_Outset_Left')],
-            'Roof_Outset_Right': [fm('Roof_Outset_Right')]
+            'Roof_Left_Flat_Right_Flat': [fm('Roof_Left_Flat_Right_Flat')],
+            'Roof_Left_Flat_Right_Inset': [fm('Roof_Left_Flat_Right_Inset')],
+            'Roof_Left_Flat_Right_Outset': [fm('Roof_Left_Flat_Right_Outset')],
+
+            'Roof_Left_Inset_Right_Flat': [fm('Roof_Left_Inset_Right_Flat')],
+            'Roof_Left_Inset_Right_Inset': [fm('Roof_Left_Inset_Right_Inset')],
+            'Roof_Left_Inset_Right_Outset': [fm('Roof_Left_Inset_Right_Outset')],
+
+            'Roof_Left_Outset_Right_Flat': [fm('Roof_Left_Outset_Right_Flat')],
+            'Roof_Left_Outset_Right_Inset': [fm('Roof_Left_Outset_Right_Inset')],
+            'Roof_Left_Outset_Right_Outset': [fm('Roof_Left_Outset_Right_Outset')]
         }
     }
     assignedMeshes['clutter'][0].border = 10;
@@ -141,8 +167,49 @@ function createSkydome(scene) {
     scene.fogEnd = 6000.0;   // Where the fog completely obscures everything
     scene.fogColor = new BABYLON.Color3(0.769, 0.86, 1); // Light grey fog
 
+
+
+
     return skybox;
 }
+
+function setupTerrain(scene) {
+    const terrainMaterial = new BABYLON.TerrainMaterial("terrainMaterial", scene);
+    terrainMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+    terrainMaterial.specularPower = 64;
+    terrainMaterial.mixTexture = new BABYLON.Texture("assets/textures/terrain/mixMap.png", scene);
+    terrainMaterial.diffuseTexture1 = new BABYLON.Texture("assets/textures/terrain/floor.png", scene);
+    terrainMaterial.diffuseTexture2 = new BABYLON.Texture("assets/textures/terrain/rock.png", scene);
+    terrainMaterial.diffuseTexture3 = new BABYLON.Texture("assets/textures/terrain/grass.png", scene);
+
+    terrainMaterial.diffuseTexture1.uScale = terrainMaterial.diffuseTexture1.vScale = 15;
+    terrainMaterial.diffuseTexture2.uScale = terrainMaterial.diffuseTexture2.vScale = 8;
+    terrainMaterial.diffuseTexture3.uScale = terrainMaterial.diffuseTexture3.vScale = 23;
+    const ground = BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", "assets/textures/terrain/hieghtMap.png", {
+        width: 10000,
+        height: 10000,
+        subdivisions: 100,
+        minHeight: 0,
+        maxHeight: 50,
+        onReady: function (ground) {
+            ground.position.y = -160.05;
+            ground.material = terrainMaterial;
+            ground.receiveShadows = true;
+            // ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.0, friction: 100.8 }, scene);
+            // setTimeout(() => scene.physicsEnabled = true, 1000); // Enable physics after the ground is ready
+            var groundAggregate;
+            groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.MESH, { mass: 0, restitution: 0.0, friction: 1000000000.8 }, scene);
+            setTimeout(() => {
+                scene.physicsEnabled = true;
+            }, 10);
+        }
+    }, scene);
+    ground.material = terrainMaterial;
+
+    return ground;
+}
+
+
 
 
 function addRoomMap(scene, models) {
@@ -296,6 +363,10 @@ function setupPostProcessing(scene, camera) {
     // Apply contrast and exposure adjustments
     imgProc.contrast = 2.0;
     imgProc.exposure = 1.8;
+
+    // imgProc.contrast = 2.3;
+    imgProc.contrast = 2.6;
+    imgProc.exposure = 2.6;
 
     // Enable tone mapping
     // imgProc.toneMappingEnabled = true;
