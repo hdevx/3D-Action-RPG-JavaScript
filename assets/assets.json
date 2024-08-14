@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Tree",
+        "blender_object": "EXP_Tree",
+        "export_path": "assets/trees/tree.glb",
+        "load_script": "loadTree"
+    },
+    {
+        "name": "Rock",
+        "blender_object": "EXP_Rock",
+        "export_path": "assets/rocks/rock.glb",
+        "load_script": "loadRock"
+    }
+]
